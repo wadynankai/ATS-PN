@@ -1,0 +1,10 @@
+﻿  stdafx.cpp
+  ATS-PN.cpp
+  CATSPN.cpp
+  dllmain.cpp
+     ライブラリ D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.lib とオブジェクト D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.exp を作成中
+  コード生成しています。
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+  All 35 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  コード生成が終了しました。
+  ATS-PN.vcxproj -> D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.dll
