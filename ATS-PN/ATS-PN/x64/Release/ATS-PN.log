@@ -1,0 +1,12 @@
+﻿  stdafx.cpp
+  ATS-PN.cpp
+  CATSPN.cpp
+  dllmain.cpp
+     ライブラリ C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\x64\Release\ATS-PNx64.lib とオブジェクト C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\x64\Release\ATS-PNx64.exp を作成中
+  Previous IPDB not found, fall back to full compilation.
+ATS-PNx64.exp : warning LNK4070: .EXP 内の /OUT:ATS-PN.dll ディレクティブの指定が出力ファイル名 'C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\x64\Release\ATS-PNx64.dll' と異なっています。ディレクティブは無視されます。
+  コード生成しています。
+  All 35 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  コード生成が終了しました。
+ATS-PNx64.exp : warning LNK4070: .EXP 内の /OUT:ATS-PN.dll ディレクティブの指定が出力ファイル名 'C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\x64\Release\ATS-PNx64.dll' と異なっています。ディレクティブは無視されます。
+  ATS-PN.vcxproj -> C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\x64\Release\ATS-PNx64.dll
