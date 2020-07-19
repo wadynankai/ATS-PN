@@ -10,6 +10,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
+		wchar_t FileName[MAX_PATH];
+		wchar_t Drive[MAX_PATH];
+		wchar_t Dir[MAX_PATH];
+		GetModuleFileName(hModule, FileName, MAX_PATH);
+		_wsplitpath_s(FileName, Drive, MAX_PATH, Dir, MAX_PATH, NULL, 0, NULL, 0);
+		g_module_dir = (std::wstring)Drive + Dir;
 		g_pncontrol.TrainSpeed = &g_TrainSpeed;
 		g_pncontrol.DeltaT = &g_deltaT;
     case DLL_THREAD_ATTACH:
@@ -29,7 +35,9 @@ ATS_API void WINAPI Load(void)
 // Called when this plug-in is unloaded
 ATS_API void WINAPI Dispose(void)
 {
-
+	if (g_door)delete g_door, g_door = nullptr;
+	if (pMasteringVoice)pMasteringVoice->DestroyVoice();
+	SAFE_RELEASE(pXAudio2);
 }
 
 // Returns the version numbers of ATS plug-in
@@ -82,7 +90,16 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int
 	//音
 	sound[6] = g_pncontrol.HaltSound;//駅通防止チャイム
 	sound[11] = g_pncontrol.ApproachSound;//「接近，接近」
-
+	if (g_door)
+	{
+		g_door->Running(vehicleState);
+		panel[217] = g_door->doorYama;
+		panel[218] = g_door->doorUmi;
+		sound[121] = g_door->DoorClsL;
+		sound[122] = g_door->DoorClsR;
+		sound[123] = g_door->DoorOpnL;
+		sound[124] = g_door->DoorOpnR;
+	}
 	
 	g_output.Reverser = g_Reverser;
 	g_output.Power = g_Power;
@@ -126,6 +143,9 @@ ATS_API void WINAPI KeyUp(int atsKeyCode)
 	case ATS_KEY_B1:
 		g_pncontrol.resetATSPN();
 		break;
+	case ATS_KEY_A1:
+		if (g_door)g_door->NambaDoorOpn();
+		break;
 	}
 }
 
@@ -139,12 +159,14 @@ ATS_API void WINAPI HornBlow(int hornType)
 ATS_API void WINAPI DoorOpen(void)
 {
 	g_pncontrol.haltOFF();
+	if (g_door)g_door->DoorOpn();
 }
 
 // Called when the door is closed
 ATS_API void WINAPI DoorClose(void)
 {
 	g_pncontrol.haltOFF();
+	if (g_door)g_door->DoorCls();
 }
 
 // Called when current signal is changed
@@ -172,12 +194,43 @@ ATS_API void WINAPI SetBeaconData(ATS_BEACONDATA beaconData)
 		break;
 	case ATS_BEACON_HALT:
 		g_pncontrol.haltON(beaconData.Optional);
+		switch (beaconData.Optional)
+		{
+		case 1:
+			if (g_door)g_door->NextNamba();
+			break;
+		case 30:
+			if (g_door)g_door->NextSano();
+			break;
+		}
 		break;
 	case ATS_BEACON_LINELIMIT:
 		g_pncontrol.LineMax(beaconData.Optional);
 		break;
 	case ATS_BEACON_TIMETABLE:
-		g_timetable = beaconData.Optional;
+		g_timetable = beaconData.Optional % 1000;
+		if (!g_door)
+		{
+			if (!pXAudio2)
+			{
+				HRESULT hr;
+				if (FAILED(hr = XAudio2Create(&pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
+				{
+					SAFE_RELEASE(pXAudio2)
+				}
+				else
+				{
+					if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
+					{
+						if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
+						SAFE_RELEASE(pXAudio2);//XAudio2をやめる
+					}
+				}
+			}
+			g_door = new CDoorcontrol(g_module_dir, g_timetable, pXAudio2);
+		}
+		else g_door->setTrainNo(g_timetable);
+		break;
 	}
 }
 

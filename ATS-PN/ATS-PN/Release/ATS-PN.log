@@ -1,10 +1,13 @@
 ﻿  stdafx.cpp
   ATS-PN.cpp
   CATSPN.cpp
+  CDoorcontrol.cpp
+  CSourceVoice.cpp
   dllmain.cpp
-     ライブラリ D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.lib とオブジェクト D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.exp を作成中
+     ライブラリ C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\Release\ATS-PN.lib とオブジェクト C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\Release\ATS-PN.exp を作成中
   コード生成しています。
-  Previous IPDB was built with incompatible compiler, fall back to full compilation.
-  All 35 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  858 of 858 functions (100.0%) were compiled.
+    825 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   コード生成が終了しました。
-  ATS-PN.vcxproj -> D:\OneDrive\Visual Studio 2017\Projects\ATS-PN\Release\ATS-PN.dll
+  ATS-PN.vcxproj -> C:\Users\wadyn\source\repos\wadynankai\ATS-PN\ATS-PN\Release\ATS-PN.dll

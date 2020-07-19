@@ -1,4 +1,4 @@
-LIBRARY ATS-PN
+;LIBRARY ATS-PN
 
 EXPORTS
 	GetPluginVersion

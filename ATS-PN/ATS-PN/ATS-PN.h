@@ -1,6 +1,8 @@
 #pragma once
-#include "atsplugin.h"
+//#include "atsplugin.h"
 #include "CATSPN.h"
+#include "CDoorcontrol.h"
+#include <string>
 
 #define ATS_BEACON_SPDLIM 6//PN制御速度制限
 #define ATS_BEACON_STOPPATTERN 12//PN制御駅通防止
@@ -24,6 +26,11 @@ int g_AstTimer;//アスタリスク点滅タイマー
 bool g_Aster;//アスタリスク
 int g_timetable;//時刻表
 
+
+IXAudio2* pXAudio2 = nullptr;
+IXAudio2MasteringVoice* pMasteringVoice = nullptr;
+std::wstring g_module_dir;
 CATSPN g_pncontrol;
+CDoorcontrol* g_door = nullptr;
 
 ATS_HANDLES g_output;//出力
