@@ -28,7 +28,8 @@ CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, FILE* fp, U
 	m_LoopCount = LoopCount;
 	m_buffer = { 0 };
 	m_started = false;
-	CreateSound(fp);
+	if(fp)CreateSound(fp);
+	else CreateSourceVoice();
 }
 
 void CSourceVoice::Setparam(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount)
@@ -201,15 +202,15 @@ void CSourceVoice::CreateSound(FILE* fp)
 	HRESULT hr;
 	if (FAILED(hr = CreateSourceVoice()))//このモータ音が見つからないまたは何らかの理由でソースボイスが作成できない。
 	{
-		fwprintf_s(fp, L"ソースボイスの作成失敗\nエラー:%#X\n", hr);
-		fwprintf_s(fp, L"%lsが見つかりませんでした。\n", m_szFilename);
+		if (fp)fwprintf_s(fp, L"ソースボイスの作成失敗\nエラー:%#X\n", hr);
+		if (fp)fwprintf_s(fp, L"%lsが見つかりませんでした。\n", m_szFilename);
 		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
 //		SAFE_DELETE(*pCSourceVoice);
 	}
 	else//このモーター音のソースボイスを作成できた。
 	{
-		fwprintf_s(fp, L"ソースボイスの作成成功\n");
-		fwprintf_s(fp, L"ファイル名：%ls\n", m_szFilename);
+		if (fp)fwprintf_s(fp, L"ソースボイスの作成成功\n");
+		if (fp)fwprintf_s(fp, L"ファイル名：%ls\n", m_szFilename);
 		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
 	}
 }
