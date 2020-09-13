@@ -1,14 +1,9 @@
-﻿  stdafx.cpp
-  CATSPN.cpp
-  CAutoAnnounce.cpp
+﻿  CAutoAnnounce.cpp
   CDoorcontrol.cpp
-  CSourceVoice.cpp
-  dllmain.cpp
-  LoadBveText.cpp
      ライブラリ D:\Visual Studio 2017\Projects\BvePlugin\ATS-PN\ATS-PN\Release\ATS-PN.lib とオブジェクト D:\Visual Studio 2017\Projects\BvePlugin\ATS-PN\ATS-PN\Release\ATS-PN.exp を作成中
   コード生成しています。
-  1009 of 1009 functions (100.0%) were compiled.
-    59 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  7 of 1012 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
   コード生成が終了しました。
   ATS-PN.vcxproj -> D:\Visual Studio 2017\Projects\BvePlugin\ATS-PN\ATS-PN\Release\ATS-PN.dll

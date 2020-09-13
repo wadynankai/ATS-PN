@@ -144,8 +144,8 @@ void CAutoAnnounce::DoorCls(void)
 				BOOL mfStarted = FALSE;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
 				hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
 				mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
-				if (!a.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, a.name1, 1);//放送を登録
-				if (!a.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, a.name2, 1);//放送を登録
+				if (!a.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, a.name1, nullptr, 0);//放送を登録
+				if (!a.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, a.name2, nullptr, 0);//放送を登録
 				if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
 				switch (a.mode)//出発後放送の位置を登録
 				{
@@ -176,8 +176,8 @@ void CAutoAnnounce::DoorCls(void)
 		BOOL mfStarted = FALSE;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
 		hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
 		mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
-		if (!m_first.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, m_first.name1, 1);//放送を登録
-		if (!m_first.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, m_first.name2, 1);//放送を登録
+		if (!m_first.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, m_first.name1, nullptr, 0);//放送を登録
+		if (!m_first.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, m_first.name2, nullptr, 0);//放送を登録
 		if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
 		switch (m_first.mode)//出発後放送の位置を登録
 		{
