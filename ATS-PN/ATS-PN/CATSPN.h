@@ -33,6 +33,8 @@ public:
 	float* TrainSpeed;
 	//前回との時刻の差
 	int *DeltaT;
+	//前回との位置の差
+	double* DeltaL;
 	//非常ブレーキ指令
 	bool emgBrake;
 	//常用最大ブレーキ指令
@@ -74,17 +76,17 @@ private:
 	//駅番号点滅タイマー
 	int m_Sta_tmr;
 	//駅通防止停止距離
-	float m_halt_dist;
+	double m_halt_dist;
 	//速度制限速度
 	float m_LimitSpeed_Speed;
 	//速度制限開始距離
-	float m_LimitSpeed_dist;
+	double m_LimitSpeed_dist;
 	//終端防護距離
-	float m_Terminal_Dist;
+	double m_Terminal_Dist;
 	//線区最高速度
-	float m_Line_Max_Speed;
+	double m_Line_Max_Speed;
 	//駅通防止チャイム（駅に移動対策）
-	int m_haltchime;
+//	int m_haltchime;
 	//駅通防止チャイム再生済み
 	bool m_haltchime_played;
 	//駅通防止パターンあり

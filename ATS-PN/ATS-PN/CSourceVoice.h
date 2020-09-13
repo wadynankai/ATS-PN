@@ -1,5 +1,7 @@
-#pragma once
-#include "stdafx.h"
+#ifndef CSOURCEVOICE_INCLUDED
+#define CSOURCEVOICE_INCLUDED
+
+#include "pch.h"
 #include <vector>
 #include <string>
 #include <wrl/client.h>
@@ -16,16 +18,17 @@ class CSourceVoice
 {
 public:
 	CSourceVoice();
-	CSourceVoice(IXAudio2* Xau2, std::wstring name, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
-	CSourceVoice(IXAudio2* Xau2, std::wstring name, FILE*, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
+	CSourceVoice(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
+	CSourceVoice(IXAudio2* Xau2, const std::wstring& name, FILE*, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
 	~CSourceVoice();
-	void Setparam(IXAudio2* Xau2, std::wstring name, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
+	void Setparam(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE);
 	HRESULT CreateSourceVoice(void);
 	HRESULT Start(UINT32 OperationSet = XAUDIO2_COMMIT_NOW);
 	HRESULT Stop(UINT32 OperationSet = XAUDIO2_COMMIT_NOW);
 	HRESULT SetFrequencyRatio(float ratio, UINT32 OperationSet = XAUDIO2_COMMIT_NOW);
 	HRESULT SetVolume(float vol, UINT32 OperationSet = XAUDIO2_COMMIT_NOW);
 	void CreateSound(FILE*);
+	IXAudio2SourceVoice* pSourceVoice();
 	bool isRunning();//çƒê∂íÜÇ©Ç«Ç§Ç©
 	bool flag = false;//trueÇÃéûÇ…äJénÇ∑ÇÈÇ»Ç«
 private:
@@ -37,3 +40,6 @@ private:
 	XAUDIO2_BUFFER m_buffer;
 	bool m_started;//startÇµÇƒÇ©ÇÁstopÇ∑ÇÈÇ‹Ç≈true
 };
+
+
+#endif // !CSOURCEVOICE_INCLUDED

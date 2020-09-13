@@ -1,8 +1,10 @@
 #pragma once
+#include "pch.h"
 //#include "atsplugin.h"
 #include "CATSPN.h"
 #include "CDoorcontrol.h"
-#include <string>
+#include "CAutoAnnounce.h"
+//#include <string>
 
 #define ATS_BEACON_SPDLIM 6//PN制御速度制限
 #define ATS_BEACON_STOPPATTERN 12//PN制御駅通防止
@@ -20,11 +22,13 @@ int g_Reverser;//レバーサ
 float g_TrainSpeed;//速度
 int g_time;//時刻
 int g_deltaT;//前のフレームとの時刻の差
+double g_location;
+double g_deltaL;//1フレームで進んだ距離
 int g_tmr;//停車駅名点滅タイマー
 int g_StopSta;//停車駅名
 int g_AstTimer;//アスタリスク点滅タイマー
 bool g_Aster;//アスタリスク
-int g_timetable;//時刻表
+int g_timetable = 0;//時刻表
 
 
 IXAudio2* pXAudio2 = nullptr;
@@ -32,5 +36,6 @@ IXAudio2MasteringVoice* pMasteringVoice = nullptr;
 std::wstring g_module_dir;
 CATSPN g_pncontrol;
 CDoorcontrol* g_door = nullptr;
+CAutoAnnounce* g_announce = nullptr;
 
 ATS_HANDLES g_output;//出力

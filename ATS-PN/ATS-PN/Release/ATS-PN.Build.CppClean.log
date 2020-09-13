@@ -1,32 +1,25 @@
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.lib
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.exp
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.ipdb
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.iobj
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.pch
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\vc141.pdb
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\stdafx.obj
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\dllmain.obj
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\catspn.obj
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.obj
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.dll
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.pdb
-c:\users\wadyn\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.res
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.obj
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\catspn.obj
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\dllmain.obj
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\stdafx.obj
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.res
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.pch
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\vc141.pdb
-d:\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.pdb
-d:\onedrive\visual studio 2017\projects\ats-pn\release\ats-pn.dll
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\ats-pn.write.1u.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\cl.command.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\cl.read.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\cl.write.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\link.command.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\link.read.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\link.write.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\rc.command.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\rc.read.1.tlog
-d:\onedrive\visual studio 2017\projects\ats-pn\ats-pn\release\ats-pn.tlog\rc.write.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.lib
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.exp
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.ipdb
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.iobj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.pch
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\vc142.pdb
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\stdafx.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\dllmain.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\csourcevoice.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\cdoorcontrol.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\cautoannounce.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\catspn.obj
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.dll
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\release\ats-pn.pdb
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.res
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\ats-pn.write.1u.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\cl.command.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\cl.read.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\cl.write.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\link.command.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\link.read.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\link.write.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\rc.command.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\rc.read.1.tlog
+c:\users\wadyn\source\repos\wadynankai\ats-pn\ats-pn\ats-pn\release\ats-pn.tlog\rc.write.1.tlog

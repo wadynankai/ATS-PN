@@ -125,6 +125,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;ATSPN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -144,6 +146,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;ATSPN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,18 +162,21 @@
     <ClInclude Include="ATS-PN.h" />
     <ClInclude Include="atsplugin.h" />
     <ClInclude Include="CATSPN.h" />
+    <ClInclude Include="CAutoAnnounce.h" />
     <ClInclude Include="CDoorcontrol.h" />
     <ClInclude Include="CSourceVoice.h" />
+    <ClInclude Include="LoadBveText.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ATS-PN.cpp" />
     <ClCompile Include="CATSPN.cpp" />
+    <ClCompile Include="CAutoAnnounce.cpp" />
     <ClCompile Include="CDoorcontrol.cpp" />
     <ClCompile Include="CSourceVoice.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="LoadBveText.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

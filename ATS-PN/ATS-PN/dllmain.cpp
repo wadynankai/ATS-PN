@@ -1,5 +1,6 @@
 ﻿// dllmain.cpp : DLL アプリケーションのエントリ ポイントを定義します。
-#include "stdafx.h"
+#pragma once
+#include "pch.h"
 #include "ATS-PN.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -18,8 +19,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		g_module_dir = (std::wstring)Drive + Dir;
 		g_pncontrol.TrainSpeed = &g_TrainSpeed;
 		g_pncontrol.DeltaT = &g_deltaT;
+		g_pncontrol.DeltaL = &g_deltaL;
+		break;
     case DLL_THREAD_ATTACH:
+		break;
     case DLL_THREAD_DETACH:
+		break;
     case DLL_PROCESS_DETACH:
         break;
     }
@@ -29,15 +34,21 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 // Called when this plug-in is loaded
 ATS_API void WINAPI Load(void)
 {
-
 }
 
 // Called when this plug-in is unloaded
 ATS_API void WINAPI Dispose(void)
 {
-	if (g_door)delete g_door, g_door = nullptr;
+//	std::ofstream ofs("dispose.txt");
+//	SYSTEMTIME syst;
+//	GetLocalTime(&syst);
+//	ofs << syst.wHour << ":" << syst.wMinute << ":" << syst.wSecond << "." << syst.wMilliseconds << std::endl;
+	SAFE_DELETE(g_door);
+	SAFE_DELETE(g_announce)
 	if (pMasteringVoice)pMasteringVoice->DestroyVoice();
 	SAFE_RELEASE(pXAudio2);
+//	ofs << "終了" << std::endl;
+//	ofs.close();
 }
 
 // Returns the version numbers of ATS plug-in
@@ -60,10 +71,12 @@ ATS_API void WINAPI Initialize(int brake)
 }
 
 // Called every frame
-ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int *sound)
+ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int* panel, int* sound)
 {
 	g_deltaT = vehicleState.Time - g_time;
 	g_time = vehicleState.Time;
+	g_deltaL = vehicleState.Location - g_location;
+	g_location = vehicleState.Location;
 	g_TrainSpeed = vehicleState.Speed;
 
 	g_pncontrol.RunPNcontrol();//PN制御実行
@@ -92,15 +105,12 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int
 	sound[11] = g_pncontrol.ApproachSound;//「接近，接近」
 	if (g_door)
 	{
-		g_door->Running(vehicleState);
+		g_door->Running(vehicleState.Time);
 		panel[217] = g_door->doorYama;
 		panel[218] = g_door->doorUmi;
-		sound[121] = g_door->DoorClsL;
-		sound[122] = g_door->DoorClsR;
-		sound[123] = g_door->DoorOpnL;
-		sound[124] = g_door->DoorOpnR;
 	}
-	
+	if (g_announce)g_announce->Running(vehicleState.Location, vehicleState.Time);
+
 	g_output.Reverser = g_Reverser;
 	g_output.Power = g_Power;
 	g_output.Brake = g_Brake;//正常時
@@ -167,6 +177,7 @@ ATS_API void WINAPI DoorClose(void)
 {
 	g_pncontrol.haltOFF();
 	if (g_door)g_door->DoorCls();
+	if (g_announce)g_announce->DoorCls();
 }
 
 // Called when current signal is changed
@@ -193,44 +204,43 @@ ATS_API void WINAPI SetBeaconData(ATS_BEACONDATA beaconData)
 		g_pncontrol.TerminalSafetyON(beaconData.Optional);
 		break;
 	case ATS_BEACON_HALT:
-		g_pncontrol.haltON(beaconData.Optional);
-		switch (beaconData.Optional)
-		{
-		case 1:
-			if (g_door)g_door->NextNamba();
-			break;
-		case 30:
-			if (g_door)g_door->NextSano();
-			break;
-		}
+		if (beaconData.Optional != 1)g_pncontrol.haltON(beaconData.Optional);
+		if (g_door)g_door->Halt(beaconData.Optional);
+		if (g_announce)g_announce->Halt(beaconData.Optional);
 		break;
 	case ATS_BEACON_LINELIMIT:
 		g_pncontrol.LineMax(beaconData.Optional);
 		break;
 	case ATS_BEACON_TIMETABLE:
 		g_timetable = beaconData.Optional % 1000;
-		if (!g_door)
+		if (g_door)g_door->setTrainNo(g_timetable);
+		else
 		{
-			if (!pXAudio2)
+			HRESULT hr;
+			if (FAILED(hr = XAudio2Create(&pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
 			{
-				HRESULT hr;
-				if (FAILED(hr = XAudio2Create(&pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
+				SAFE_RELEASE(pXAudio2);
+			}
+			else
+			{
+				if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
 				{
-					SAFE_RELEASE(pXAudio2)
-				}
-				else
-				{
-					if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
-					{
-						if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
-						SAFE_RELEASE(pXAudio2);//XAudio2をやめる
-					}
+					if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
+					SAFE_RELEASE(pXAudio2);//XAudio2をやめる
 				}
 			}
-			g_door = new CDoorcontrol(g_module_dir, g_timetable, pXAudio2);
+			g_door = new CDoorcontrol(g_module_dir, pXAudio2);
+			if (g_door)g_door->setTrainNo(g_timetable);
 		}
-		else g_door->setTrainNo(g_timetable);
+		if (beaconData.Optional >= 1000)
+		{
+			if (g_announce)g_announce->setTrainNo(beaconData.Optional);
+			else
+			{
+				g_announce = new CAutoAnnounce(g_module_dir, pXAudio2);
+				if (g_announce)g_announce->setTrainNo(beaconData.Optional);
+			}
+		}
 		break;
 	}
 }
-

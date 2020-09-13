@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "CSourceVoice.h"
 CSourceVoice::CSourceVoice()
 {
@@ -10,7 +10,7 @@ CSourceVoice::CSourceVoice()
 	m_started = false;
 }
 
-CSourceVoice::CSourceVoice(IXAudio2* Xau2, std::wstring name, UINT32 LoopCount)
+CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount)
 {
 	m_XAudio2 = Xau2;
 	m_pSourceVoice = nullptr;
@@ -20,7 +20,7 @@ CSourceVoice::CSourceVoice(IXAudio2* Xau2, std::wstring name, UINT32 LoopCount)
 	m_started = false;
 	CreateSourceVoice();
 }
-CSourceVoice::CSourceVoice(IXAudio2* Xau2, std::wstring name, FILE* fp, UINT32 LoopCount)
+CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, FILE* fp, UINT32 LoopCount)
 {
 	m_XAudio2 = Xau2;
 	m_pSourceVoice = nullptr;
@@ -31,7 +31,7 @@ CSourceVoice::CSourceVoice(IXAudio2* Xau2, std::wstring name, FILE* fp, UINT32 L
 	CreateSound(fp);
 }
 
-void CSourceVoice::Setparam(IXAudio2* Xau2, std::wstring name, UINT32 LoopCount)
+void CSourceVoice::Setparam(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount)
 {
 	m_XAudio2 = Xau2;
 	m_pSourceVoice = nullptr;
@@ -44,6 +44,7 @@ CSourceVoice::~CSourceVoice()
 	if (m_started)Stop();
 	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
 }
+
 
 HRESULT CSourceVoice::CreateSourceVoice(void)
 {
@@ -103,9 +104,9 @@ HRESULT CSourceVoice::CreateSourceVoice(void)
 		m_buffer.pAudioData = m_audioData.data();
 		m_buffer.Flags = XAUDIO2_END_OF_STREAM;
 		m_buffer.AudioBytes = static_cast<UINT32>(m_audioData.size());
+		m_buffer.LoopCount = m_LoopCount;
 		if (m_LoopCount == XAUDIO2_LOOP_INFINITE)//ループ再生の時のみ
 		{
-			m_buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
 			//バッファをソースボイスに登録する。
 			hr = m_pSourceVoice->SubmitSourceBuffer(&m_buffer);
 			Start();
@@ -211,6 +212,11 @@ void CSourceVoice::CreateSound(FILE* fp)
 		fwprintf_s(fp, L"ファイル名：%ls\n", m_szFilename);
 		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
 	}
+}
+
+IXAudio2SourceVoice* CSourceVoice::pSourceVoice()
+{
+	return m_pSourceVoice;
 }
 
 bool CSourceVoice::isRunning()

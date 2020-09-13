@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "CATSPN.h"
 
 
@@ -15,7 +15,7 @@ CATSPN::~CATSPN()
 // 初期化
 void CATSPN::initATSPN(void)
 {
-	m_Line_Max_Speed = 999;
+	m_Line_Max_Speed = INT_MAX;
 	haltOFF();
 	LimitSpeedOFF();
 	m_TerminalSafety = false;
@@ -37,6 +37,12 @@ void CATSPN::RunPNcontrol(void)
 	halt();
 	LimitSpeed();
 	TerminalSafety();
+	if (m_halt || m_TerminalSafety)//ピンポンの設定
+	{
+		if (!m_haltchime_played)HaltSound = ATS_SOUND_PLAY;
+		else HaltSound = ATS_SOUND_CONTINUE;
+	}
+	else HaltSound = ATS_SOUND_STOP;
 	//ブレーキの動作
 	svcBrake = (m_halt_b || m_LimitSpeed_b || m_LineMaxSpeed_b);
 	emgBrake = m_TerminalSafety_b;
@@ -68,7 +74,7 @@ void CATSPN::haltON(int number)
 	m_haltchime_played = false;
 	m_Sta_count = 0;//点滅カウンタリセット
 	m_Sta_tmr = 0;//点滅タイマーリセット
-	m_haltchime = ATS_SOUND_STOP;
+//	m_haltchime = ATS_SOUND_STOP;
 }
 void CATSPN::stopPattern(int dist)
 {
@@ -82,15 +88,10 @@ void CATSPN::halt(void)
 	{
 		float pattern = *TrainSpeed * *TrainSpeed / PN_DECELERATION;//停止に必要な距離
 		float Approach = *TrainSpeed * *TrainSpeed / PN_APPROACH;
-		if (!m_haltchime_played)
-		{
-			m_haltchime = ATS_SOUND_PLAY;
-			m_haltchime_played = true;
-		}
 		if (m_halt_P)
 		{
-			float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
-			m_halt_dist -= def;
+//			float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
+			m_halt_dist -= *DeltaL;
 			m_halt_App = (Approach >= m_halt_dist);
 			m_halt_b = (pattern >= m_halt_dist && *TrainSpeed > 15);
 		}
@@ -100,10 +101,7 @@ void CATSPN::halt(void)
 		m_halt_P = false;
 		m_halt_b = false;
 		m_halt_App = false;
-		m_haltchime = ATS_SOUND_STOP;
 	}
-	HaltSound = m_haltchime;
-	if (m_haltchime == ATS_SOUND_PLAY)m_haltchime = ATS_SOUND_CONTINUE;
 	//駅名点滅
 	if (m_halt && m_Sta_tmr >= 0 && m_Sta_tmr <= 510 && m_Sta_count < 52)
 	{
@@ -143,7 +141,9 @@ void CATSPN::haltOFF(void)
 	m_halt_P = false;
 	m_halt_b = false;
 	m_halt_App = false;
-	m_haltchime = ATS_SOUND_STOP;
+	m_TerminalSafety = false;
+	m_Terminal_Dist = 0.0f;
+//	m_haltchime = ATS_SOUND_STOP;
 }
 // 線区最高速度
 void CATSPN::LineMax(int speed)
@@ -163,8 +163,7 @@ void CATSPN::LimitSpeed()
 	{
 		float pattern = (*TrainSpeed * *TrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / PN_DECELERATION;//減速に必要な距離
 		float Approach = (*TrainSpeed * *TrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / PN_APPROACH;
-		float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
-		m_LimitSpeed_dist -= def;
+		m_LimitSpeed_dist -= *DeltaL;
 		if (m_LimitSpeed_dist >= 0)//制限速度に入るまで
 		{
 			m_LimitSpeed_App = (Approach >= m_LimitSpeed_dist);
@@ -195,8 +194,7 @@ void CATSPN::TerminalSafety(void)
 	{
 		float pattern = *TrainSpeed * *TrainSpeed / PN_DECELERATION;//停止に必要な距離
 		float Approach = *TrainSpeed * *TrainSpeed / PN_APPROACH;
-		float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
-		m_Terminal_Dist -= def;
+		m_Terminal_Dist -= *DeltaL;
 		m_TerminalSafety_App = (Approach >= m_Terminal_Dist);
 		m_TerminalSafety_b = ((pattern >= m_Terminal_Dist && *TrainSpeed > 5) || m_Terminal_Dist <= -0.5);
 	}
