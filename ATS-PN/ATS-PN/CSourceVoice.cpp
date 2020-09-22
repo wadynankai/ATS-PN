@@ -1,43 +1,53 @@
 #include "pch.h"
 #include "CSourceVoice.h"
-CSourceVoice::CSourceVoice()
+CSourceVoice::CSourceVoice() :m_XAudio2(nullptr), m_pSourceVoice(nullptr), m_szFilename(nullptr), m_LoopCount(0U), m_buffer{ 0 }, m_started(false), flag(false)
 {
-	m_XAudio2 = nullptr;
-	m_pSourceVoice = nullptr;
-	m_szFilename = nullptr;
-	m_LoopCount = 0U;
-	m_buffer = { 0 };
-	m_started = false;
 }
 
-CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount)
+CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount) :
+	m_XAudio2(Xau2),
+	m_pSourceVoice(nullptr),
+	m_szFilename((LPWSTR)name.c_str()),
+	m_LoopCount(LoopCount), m_buffer{ 0 },
+	m_started(false),
+	flag(false)
 {
-	m_XAudio2 = Xau2;
-	m_pSourceVoice = nullptr;
-	m_szFilename = (LPWSTR)name.c_str();
-	m_LoopCount = LoopCount;
-	m_buffer = { 0 };
-	m_started = false;
 	CreateSourceVoice();
 }
-CSourceVoice::CSourceVoice(IXAudio2* Xau2, const std::wstring& name, FILE* fp, UINT32 LoopCount)
+
+CSourceVoice::CSourceVoice(IXAudio2* Xau2, FILE* fp, const std::wstring& name, UINT32 LoopCount) :
+	m_XAudio2(Xau2),
+	m_pSourceVoice(nullptr),
+	m_szFilename((LPWSTR)name.c_str()),
+	m_LoopCount(LoopCount), m_buffer{ 0 },
+	m_started(false),
+	flag(false)
 {
-	m_XAudio2 = Xau2;
-	m_pSourceVoice = nullptr;
-	m_szFilename = (LPWSTR)name.c_str();
-	m_LoopCount = LoopCount;
-	m_buffer = { 0 };
-	m_started = false;
-	if(fp)CreateSound(fp);
-	else CreateSourceVoice();
+	CreateSourceVoice(fp);
 }
 
 void CSourceVoice::Setparam(IXAudio2* Xau2, const std::wstring& name, UINT32 LoopCount)
 {
 	m_XAudio2 = Xau2;
-	m_pSourceVoice = nullptr;
+	if (m_started)Stop();
+	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
 	m_szFilename = (LPWSTR)name.c_str();
+	m_audioData.clear();
 	m_LoopCount = LoopCount;
+	m_started = false;
+	CreateSourceVoice();
+}
+
+void CSourceVoice::Setparam(IXAudio2* Xau2, FILE* fp, const std::wstring& name, UINT32 LoopCount)
+{
+	m_XAudio2 = Xau2;
+	if (m_started)Stop();
+	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
+	m_szFilename = (LPWSTR)name.c_str();
+	m_audioData.clear();
+	m_LoopCount = LoopCount;
+	m_started = false;
+	CreateSourceVoice(fp);
 }
 
 CSourceVoice::~CSourceVoice()
@@ -47,7 +57,7 @@ CSourceVoice::~CSourceVoice()
 }
 
 
-HRESULT CSourceVoice::CreateSourceVoice(void)
+HRESULT CSourceVoice::CreateSourceVoice(FILE* fp)
 {
 	BOOL mfStarted = FALSE;//メディアファンデーションプラットフォームを初期化したらTRUEにする。（通常は最後までFALSE）
 	Microsoft::WRL::ComPtr<IMFSourceReader>pReader;//ソースリーダー構造体
@@ -97,7 +107,7 @@ HRESULT CSourceVoice::CreateSourceVoice(void)
 	}
 	m_audioData.shrink_to_fit();
 	// ソースボイスの作成
-	if (SUCCEEDED(hr))hr = m_XAudio2->CreateSourceVoice(&m_pSourceVoice, &wfx, 0U, 10.0f);
+	if (SUCCEEDED(hr))hr = m_XAudio2->CreateSourceVoice(&m_pSourceVoice, &wfx, 0U, XAUDIO2_MAX_FREQ_RATIO);
 	// WAVEデータのサンプルをXAUDIO2_BUFFERに渡す。
 	if (SUCCEEDED(hr))
 	{
@@ -116,91 +126,9 @@ HRESULT CSourceVoice::CreateSourceVoice(void)
 	}
 	else if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
 	if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
-	return hr;
-}
 
-HRESULT CSourceVoice::Start(UINT32 OperationSet)
-{
-	HRESULT hr = S_OK;
-	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
-	{
-		if (m_pSourceVoice && !m_started)
-		{
-			if (SUCCEEDED(hr = m_pSourceVoice->Start(0U, OperationSet)))m_started = true;
-			return hr;
-		}
-		else return E_FAIL;
-	}
-	else
-	{
-		if (m_pSourceVoice)
-		{
-			if (isRunning())
-			{
-				if (FAILED(hr = Stop()))return hr;
-			}
-			if (FAILED(hr = m_pSourceVoice->SubmitSourceBuffer(&m_buffer)))return hr;
-			if (!m_started)
-			{
-				if (SUCCEEDED(hr = m_pSourceVoice->Start(0U, OperationSet)))m_started = true;
-
-			}
-			return hr;
-		}
-		else return E_FAIL;
-	}
-}
-
-HRESULT CSourceVoice::Stop(UINT32 OperationSet)
-{
-	HRESULT hr = S_OK;
-	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
-	{
-		if (m_pSourceVoice && m_started)
-		{
-			if (SUCCEEDED(m_pSourceVoice->Stop(0U, OperationSet)))m_started = false;
-			return hr;
-		}
-		else return E_FAIL;
-	}
-	else
-	{
-		if (m_pSourceVoice)
-		{
-			if (m_started)
-			{
-				if (SUCCEEDED(hr = m_pSourceVoice->Stop(0U, OperationSet)))m_started = false;
-				else return hr;
-			}
-			return m_pSourceVoice->FlushSourceBuffers();
-		}
-		else return E_FAIL;
-	}
-}
-
-HRESULT CSourceVoice::SetFrequencyRatio(float ratio, UINT32 OperationSet)
-{
-	if (m_pSourceVoice)return m_pSourceVoice->SetFrequencyRatio(ratio, OperationSet);
-	else return E_FAIL;
-}
-
-
-HRESULT CSourceVoice::SetVolume(float vol, UINT32 OperationSet)
-{
-	if (m_pSourceVoice)
-	{
-		if (vol > 1)return m_pSourceVoice->SetVolume(1.0f, OperationSet);
-		else if (vol < 0)return m_pSourceVoice->SetVolume(0.0f, OperationSet);
-		else return m_pSourceVoice->SetVolume(vol, OperationSet);
-	}
-	else return E_FAIL;
-}
-
-void CSourceVoice::CreateSound(FILE* fp)
-{
-
-	HRESULT hr;
-	if (FAILED(hr = CreateSourceVoice()))//このモータ音が見つからないまたは何らかの理由でソースボイスが作成できない。
+	//初期化ログの書き出し
+	if (FAILED(hr))//このモータ音が見つからないまたは何らかの理由でソースボイスが作成できない。
 	{
 		if (fp)fwprintf_s(fp, L"ソースボイスの作成失敗\nエラー:%#X\n", hr);
 		if (fp)fwprintf_s(fp, L"%lsが見つかりませんでした。\n", m_szFilename);
@@ -213,26 +141,12 @@ void CSourceVoice::CreateSound(FILE* fp)
 		if (fp)fwprintf_s(fp, L"ファイル名：%ls\n", m_szFilename);
 		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
 	}
+	return hr;
 }
 
-IXAudio2SourceVoice* CSourceVoice::pSourceVoice()
+
+CSourceVoice::operator bool() const noexcept
 {
 	return m_pSourceVoice;
 }
 
-bool CSourceVoice::isRunning()
-{
-	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
-	{
-		return m_started;
-	}
-	else
-	{
-		//	BOOL isRunning = TRUE;
-		XAUDIO2_VOICE_STATE state = { 0 };
-		if (m_pSourceVoice)m_pSourceVoice->GetState(&state);
-		//	isRunning = (state.BuffersQueued > 0) != 0;
-		//	return isRunning;
-		return state.BuffersQueued > 0;
-	}
-}

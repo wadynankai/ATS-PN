@@ -212,10 +212,10 @@ void CDoorcontrol::loadconfig(void)
 	Config.close();
 	if (m_pXAudio2)
 	{
-		m_DoorClsL = new CSourceVoice(m_pXAudio2, DoorClsL_name, nullptr, 0);
-		m_DoorClsR = new CSourceVoice(m_pXAudio2, DoorClsR_name, nullptr, 0);
-		m_DoorOpnL = new CSourceVoice(m_pXAudio2, DoorOpnL_name, nullptr, 0);
-		m_DoorOpnR = new CSourceVoice(m_pXAudio2, DoorOpnR_name, nullptr, 0);
+		m_DoorClsL = new CSourceVoice(m_pXAudio2, DoorClsL_name, 0);
+		m_DoorClsR = new CSourceVoice(m_pXAudio2, DoorClsR_name, 0);
+		m_DoorOpnL = new CSourceVoice(m_pXAudio2, DoorOpnL_name, 0);
+		m_DoorOpnR = new CSourceVoice(m_pXAudio2, DoorOpnR_name, 0);
 	}
 	if (m_DoorClsL)m_DoorClsL->SetVolume(1.0f);
 	if (m_DoorClsR)m_DoorClsR->SetVolume(1.0f);

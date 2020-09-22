@@ -171,13 +171,14 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ATS-PN.cpp" />
     <ClCompile Include="CATSPN.cpp" />
     <ClCompile Include="CAutoAnnounce.cpp" />
     <ClCompile Include="CDoorcontrol.cpp" />
     <ClCompile Include="CSourceVoice.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="LoadBveText.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

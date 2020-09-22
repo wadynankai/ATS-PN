@@ -2,14 +2,20 @@
 #include "pch.h"
 #include "CAutoAnnounce.h"
 
-CAutoAnnounce::CAutoAnnounce(std::wstring moduleDir, IXAudio2* pXau2)
-{
-	m_pXAudio2 = pXau2;
-	m_module_dir = moduleDir;
-	m_table_dir = moduleDir + L"announce\\";
-	init();
-//	ofs.open(m_module_dir + L"自動放送ログ.txt");
-}
+CAutoAnnounce::CAutoAnnounce(const std::wstring& moduleDir, IXAudio2* pXau2) :
+	m_trainNo(0),//時刻表番号
+	m_staNo(0),//駅番号
+	m_Location(0.0), m_Location_pre(0.0),//距離程
+	//	m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
+	m_AnnounceMode(AnnounceMode::Commuter),
+	//	m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
+	m_set_no(false),//一度でも105番地上子を踏んだことがあったらtrue
+	m_A_Loc1(DBL_MAX),//出発放送の距離程を保存
+	m_A_Loc2(DBL_MAX),//到着放送の距離程を保存
+	m_pXAudio2(pXau2),
+	m_module_dir(moduleDir),
+	m_table_dir(moduleDir + L"announce\\") 
+{}
 
 CAutoAnnounce::~CAutoAnnounce()
 {
@@ -144,8 +150,8 @@ void CAutoAnnounce::DoorCls(void)
 				BOOL mfStarted = FALSE;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
 				hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
 				mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
-				if (!a.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, a.name1, nullptr, 0);//放送を登録
-				if (!a.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, a.name2, nullptr, 0);//放送を登録
+				if (!a.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, a.name1, 0);//放送を登録
+				if (!a.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, a.name2, 0);//放送を登録
 				if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
 				switch (a.mode)//出発後放送の位置を登録
 				{
@@ -176,8 +182,8 @@ void CAutoAnnounce::DoorCls(void)
 		BOOL mfStarted = FALSE;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
 		hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
 		mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
-		if (!m_first.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, m_first.name1, nullptr, 0);//放送を登録
-		if (!m_first.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, m_first.name2, nullptr, 0);//放送を登録
+		if (!m_first.name1.empty())m_Announce1 = new CSourceVoice(m_pXAudio2, m_first.name1, 0);//放送を登録
+		if (!m_first.name2.empty())m_Announce2 = new CSourceVoice(m_pXAudio2, m_first.name2, 0);//放送を登録
 		if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
 		switch (m_first.mode)//出発後放送の位置を登録
 		{
@@ -203,16 +209,3 @@ void CAutoAnnounce::DoorCls(void)
 	}
 }
 
-void CAutoAnnounce::init(void)
-{
-	m_trainNo = 0;//時刻表番号
-	m_staNo = 0;//駅番号
-	m_Location = 0.0, m_Location_pre = 0.0;//距離程
-//	m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
-	m_AnnounceMode = AnnounceMode::Commuter;
-//	m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
-	m_set_no = false;//一度でも105番地上子を踏んだことがあったらtrue
-	m_A_Loc1 = DBL_MAX;//出発放送の距離程を保存
-	m_A_Loc2 = DBL_MAX;//到着放送の距離程を保存
-
-}

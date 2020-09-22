@@ -4,11 +4,11 @@
 #include <string>
 #include "LoadBveText.h"
 
-#define DEP_DISTANCE_COM 50.0//通勤者出発後のアナウンスは50m走行後に鳴らす。
-#define DEP_DISTANCE_R_FIRST 80.0//ラピート始発駅のアナウンスは80m走行後に鳴らす。
-#define DEP_DISTANCE_S_FIRST 180.0//サザンプレミアム始発駅のアナウンスは150m走行後に鳴らす。
-#define DEP_DISTANCE_LIM 300.0//南海線特急出発後のアナウンスは300m走行後に鳴らす。
-#define DEP_DISTANCE_K 100.0//高野線特急始発駅のアナウンスは100m走行後に鳴らす。
+constexpr auto DEP_DISTANCE_COM = 50.0;//通勤者出発後のアナウンスは50m走行後に鳴らす。
+constexpr auto DEP_DISTANCE_R_FIRST = 80.0;//ラピート始発駅のアナウンスは80m走行後に鳴らす。
+constexpr auto DEP_DISTANCE_S_FIRST = 180.0;//サザンプレミアム始発駅のアナウンスは150m走行後に鳴らす。
+constexpr auto DEP_DISTANCE_LIM = 300.0;//南海線特急出発後のアナウンスは300m走行後に鳴らす。
+constexpr auto DEP_DISTANCE_K = 100.0;//高野線特急始発駅のアナウンスは100m走行後に鳴らす。
 enum class AnnounceMode
 {
 	manual, Commuter, Rapit, Southern, Koya
@@ -25,7 +25,7 @@ struct AnnounceSet//CSVファイルの行を保存
 class CAutoAnnounce
 {
 public:
-	CAutoAnnounce(std::wstring moduleDir, IXAudio2* pXau2 = nullptr);
+	CAutoAnnounce(const std::wstring& moduleDir, IXAudio2* pXau2 = nullptr);
 	~CAutoAnnounce();
 	void setTrainNo(int);
 	void Running(const double,const int);
@@ -33,7 +33,6 @@ public:
 	void DoorCls(void);
 
 private:
-	void init(void);
 	std::wstring m_module_dir;//プラグインのディレクトリ
 	std::wstring m_table_dir;//設定ファイルのディレクトリ
 	int m_trainNo = 0;//時刻表番号
