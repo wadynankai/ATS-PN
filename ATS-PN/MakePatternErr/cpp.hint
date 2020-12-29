@@ -1,0 +1,2 @@
+#define ATS_API __declspec(dllexport)
+#define ATS_API __declspec(dllimport)
