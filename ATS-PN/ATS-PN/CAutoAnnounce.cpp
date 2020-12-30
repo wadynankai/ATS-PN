@@ -16,7 +16,7 @@ CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* p
 	micGauge(0.0f)
 {}
 
-CAutoAnnounce::~CAutoAnnounce()
+CAutoAnnounce::~CAutoAnnounce() noexcept
 {
 	m_Announce1 = nullptr;
 	m_Announce2 = nullptr;

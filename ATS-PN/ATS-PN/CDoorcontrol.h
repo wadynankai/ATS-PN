@@ -20,13 +20,13 @@ class CDoorcontrol
 {
 public:
 	CDoorcontrol(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr);
-	~CDoorcontrol();
+	~CDoorcontrol() noexcept;
 	void setTrainNo(const int);
-	inline void Running(const int);
-	inline void Halt(const int);
-	inline void DoorOpn(void);
-	inline void DoorCls(void);
-	inline void NambaDoorOpn(void);
+	inline void Running(const int)noexcept;
+	inline void Halt(const int)noexcept;
+	inline void DoorOpn(void)noexcept;
+	inline void DoorCls(void)noexcept;
+	inline void NambaDoorOpn(void)noexcept;
 	int doorYama = 0;//ドア山インジケータ―(0:透明,1:消灯,2:点灯)
 	int doorUmi = 0;//ドア海インジケータ―(0:透明,1:消灯,2:点灯)
 
@@ -47,7 +47,7 @@ private:
 };
 
 
-inline void CDoorcontrol::Running(const int time)
+inline void CDoorcontrol::Running(const int time) noexcept
 {
 	static int time_pre = 0, deltaT = 0;
 	deltaT = time - time_pre;
@@ -112,7 +112,7 @@ inline void CDoorcontrol::Running(const int time)
 	time_pre = time;
 }
 
-inline void CDoorcontrol::Halt(const int staNo)
+inline void CDoorcontrol::Halt(const int staNo)noexcept
 {
 	switch (staNo)
 	{
@@ -131,13 +131,13 @@ inline void CDoorcontrol::Halt(const int staNo)
 	}
 }
 
-inline void CDoorcontrol::DoorOpn(void)
+inline void CDoorcontrol::DoorOpn(void)noexcept
 {
 	m_pilotLamp = false;
 	m_OpenTime = 0;
 }
 
-inline void CDoorcontrol::DoorCls(void)
+inline void CDoorcontrol::DoorCls(void)noexcept
 {
 	m_sanoF = false;
 	m_nambaF = false;
@@ -149,7 +149,7 @@ inline void CDoorcontrol::DoorCls(void)
 	doorYama = 0;
 }
 
-inline void CDoorcontrol::NambaDoorOpn(void)
+inline void CDoorcontrol::NambaDoorOpn(void)noexcept
 {
 	if (m_nambaF && !m_pilotLamp && m_pilotLampR && (m_nambaTrack == 2 || m_nambaTrack == 4 || m_nambaTrack == 6 || m_nambaTrack == 8))//難波偶数番線
 	{

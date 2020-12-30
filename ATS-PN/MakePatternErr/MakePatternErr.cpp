@@ -97,7 +97,7 @@ ATS_API void KeyDown(int atsKeyCode)
 {
 	switch (atsKeyCode)
 	{
-	case ATS_KEY_S:
+	case ATS_KEY_B1:
 		if (!g_mesuring)
 		{
 			g_mesuring = true;

@@ -65,13 +65,13 @@ CSourceVoice::CSourceVoice(IXAudio2* Xau2, HRESULT* pHr, FILE* fp, const std::fi
 	if (pHr)*pHr = hr;
 }
 
-Xaudio2CSourvoiceInterface::~Xaudio2CSourvoiceInterface()
+Xaudio2CSourvoiceInterface::~Xaudio2CSourvoiceInterface() noexcept
 {
 	if (m_started)Stop();
 	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
 }
 
-CSourceVoice::~CSourceVoice()
+CSourceVoice::~CSourceVoice() noexcept
 {
 }
 

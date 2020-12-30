@@ -77,29 +77,29 @@ template <typename T, typename X, typename Y> void makeTableFromCsv(
 }
 
 //2点間を通る直線の傾き
-template <typename X, typename Y> inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)
+template <typename X, typename Y> _NODISCARD inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
 }
 
 //2点間を通る直線のy切片
-template <typename X, typename Y> inline constexpr Y intercept(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)
+template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return -slope(p1, p2) * static_cast<Y>(p1.first) + p1.second;
 }
 
 //2点間を通る直線の方程式(first:傾き，second:y切片)
-template <typename X, typename Y> inline constexpr const std::pair<Y, Y> linear(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)
+template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y, Y> linear(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return { slope(p1,p2),intercept(p1,p2) };
 }
 
 
 //線形補間
-template <typename X, typename Y> inline constexpr Y interpolation(
+template <typename X, typename Y> _NODISCARD inline constexpr Y interpolation(
 	const X value,//x座標（速度）
 	const std::vector <std::pair<X, Y>>& table//テーブルとなるvector
-)
+)noexcept
 {
 	if (table.size() > 1)
 	{

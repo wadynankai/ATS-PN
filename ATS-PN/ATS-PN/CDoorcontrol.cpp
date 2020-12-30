@@ -16,11 +16,11 @@ inline void CDoorcontrol::loadconfig(void)
 			std::getline(Config, loadline);
 			cleanUpBveStr(&loadline, Config.getloc());
 			std::wstring left, right;
-			splitSymbol('=', loadline, &left, &right, Config.getloc());
-			if (icasecmp(left, L"CloseLeft", Config.getloc()))DoorClsL_name = m_module_dir / right;
-			else if (icasecmp(left, L"CloseRight", Config.getloc()))DoorClsR_name = m_module_dir / right;
-			else if (icasecmp(left, L"OpenLeft", Config.getloc()))DoorOpnL_name = m_module_dir / right;
-			else if (icasecmp(left, L"OpenRight", Config.getloc()))DoorOpnR_name = m_module_dir / right;
+			splitSymbol(L'=', loadline, &left, &right, Config.getloc());
+			if (icasecmp(left, L"Close Left", Config.getloc()))DoorClsL_name = m_module_dir / right;
+			else if (icasecmp(left, L"Close Right", Config.getloc()))DoorClsR_name = m_module_dir / right;
+			else if (icasecmp(left, L"Open Left", Config.getloc()))DoorOpnL_name = m_module_dir / right;
+			else if (icasecmp(left, L"Open Right", Config.getloc()))DoorOpnR_name = m_module_dir / right;
 		}
 	}
 	Config.close();
@@ -50,7 +50,7 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, IXAudio2* pXa
 	loadconfig();
 }
 
-CDoorcontrol::~CDoorcontrol()
+CDoorcontrol::~CDoorcontrol() noexcept
 {
 }
 

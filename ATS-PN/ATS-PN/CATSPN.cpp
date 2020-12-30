@@ -9,7 +9,7 @@ void CATSPN::loadPattern(std::filesystem::path module_dir)
 	if (m_ErrPatten.empty())m_ErrPatten.emplace_back(0.0f, 0.0);
 }
 // 初期化
-void CATSPN::initATSPN(void)
+void CATSPN::initATSPN(void)noexcept
 {
 	m_Line_Max_Speed = (std::numeric_limits<int>::max)();
 	haltOFF();
@@ -18,7 +18,7 @@ void CATSPN::initATSPN(void)
 	m_TerminalSafety_b = false;
 }
 // リセットボタン
-void CATSPN::resetATSPN(void)
+void CATSPN::resetATSPN(void)noexcept
 {
 	haltOFF();
 	LimitSpeedOFF();
@@ -26,7 +26,7 @@ void CATSPN::resetATSPN(void)
 	m_TerminalSafety_b = false;
 }
 //PN制御実行
-void CATSPN::RunPNcontrol(void)
+void CATSPN::RunPNcontrol(void)noexcept
 {
 	//パターンの計算
 	m_LineMaxSpeed_b = (*TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
@@ -67,7 +67,7 @@ void CATSPN::RunPNcontrol(void)
 	else TerminalSafetyDisp = 0;//終端防護消去
 }
 // 駅通防止
-void CATSPN::haltON(int number)
+void CATSPN::haltON(int number)noexcept
 {
 	m_halt = true;
 	m_Sta_No = number;
@@ -76,18 +76,30 @@ void CATSPN::haltON(int number)
 	m_Sta_tmr = 0;//点滅タイマーリセット
 //	m_haltchime = ATS_SOUND_STOP;
 }
-void CATSPN::stopPattern(int dist)
+void CATSPN::stopPattern(int dist)noexcept
 {
 	if (!m_halt)haltON(0);
 	m_halt_P = true;
 	m_halt_dist = float(dist);
 }
-void CATSPN::halt(void)
+void CATSPN::halt(void)noexcept
 {
 	if (m_halt)
 	{
 		double pattern = 0.0;//停止に必要な距離
-		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max)pattern = interpolation(*TrainSpeed, m_pattern) + interpolation(*TrainSpeed, m_ErrPatten);
+		static double err = 0.0;
+		static double brakeDist = 0.0;
+		if (m_halt_b)brakeDist += *DeltaL;
+		else brakeDist = 0.0;
+
+		if (!m_halt_b)err = interpolation(*TrainSpeed, m_ErrPatten);
+		else if (brakeDist > err)
+		{
+			if (err > 0)err -= *DeltaL;
+			else err = 0.0;
+		}
+
+		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max)pattern = interpolation(*TrainSpeed, m_pattern) + err;
 		else pattern = *TrainSpeed * *TrainSpeed / m_deceleration;
 		double Approach = *TrainSpeed * *TrainSpeed / m_approach;
 		if (m_halt_P)
@@ -95,7 +107,7 @@ void CATSPN::halt(void)
 //			float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
 			m_halt_dist -= *DeltaL;
 			m_halt_App = (Approach >= m_halt_dist);
-			m_halt_b = (pattern >= m_halt_dist && *TrainSpeed > 15);
+			m_halt_b = (pattern >= m_halt_dist && *TrainSpeed > 15.0f);
 		}
 	}
 	else
@@ -137,7 +149,7 @@ void CATSPN::halt(void)
 		m_Sta_tmr = 0;
 	}
 }
-void CATSPN::haltOFF(void)
+void CATSPN::haltOFF(void)noexcept
 {
 	m_halt = false;
 	m_halt_P = false;
@@ -148,25 +160,37 @@ void CATSPN::haltOFF(void)
 //	m_haltchime = ATS_SOUND_STOP;
 }
 // 線区最高速度
-void CATSPN::LineMax(int speed)
+void CATSPN::LineMax(int speed)noexcept
 {
 	m_Line_Max_Speed = float(speed);
 }
 // 速度制限区間
-void CATSPN::LimitSpeedON(int param)
+void CATSPN::LimitSpeedON(int param) noexcept
 {
 	m_LimitSpeed = true;
 	m_LimitSpeed_Speed = float((param % 1000) + 1);
 	m_LimitSpeed_dist = float(param / 1000);
 }
-void CATSPN::LimitSpeed()
+void CATSPN::LimitSpeed()noexcept
 {
 	if (m_LimitSpeed)
 	{
 		double pattern = 0.0;//停止に必要な距離
+		static double err = 0.0;
+		static double brakeDist = 0.0;
+		if (m_LimitSpeed_b)brakeDist += *DeltaL;
+		else brakeDist = 0.0;
+
+		if (!m_LimitSpeed_b)err = interpolation(*TrainSpeed, m_ErrPatten);
+		else if (brakeDist > err)
+		{
+			if (err > 0)err -= *DeltaL;
+			else err = 0.0;
+		}
+
 		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max && m_LimitSpeed_Speed <= m_pattern_Max)
 		{
-			pattern = interpolation(*TrainSpeed, m_pattern) - interpolation(m_LimitSpeed_Speed, m_pattern) + interpolation(*TrainSpeed, m_ErrPatten);
+			pattern = interpolation(*TrainSpeed, m_pattern) - interpolation(m_LimitSpeed_Speed, m_pattern) + err;
 		}
 		else pattern = (*TrainSpeed * *TrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / m_deceleration;//減速に必要な距離
 		double Approach = (*TrainSpeed * *TrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / m_approach;
@@ -183,24 +207,36 @@ void CATSPN::LimitSpeed()
 		}
 	}
 }
-void CATSPN::LimitSpeedOFF(void)
+void CATSPN::LimitSpeedOFF(void)noexcept
 {
 	m_LimitSpeed = false;
 	m_LimitSpeed_b = false;
 	m_LimitSpeed_App = false;
 }
 // 終端防護（非常指令）
-void CATSPN::TerminalSafetyON(int dist)
+void CATSPN::TerminalSafetyON(int dist)noexcept
 {
 	m_TerminalSafety = true;
 	m_Terminal_Dist = float(dist);
 }
-void CATSPN::TerminalSafety(void)
+void CATSPN::TerminalSafety(void)noexcept
 {
 	if (m_TerminalSafety)
 	{
-		double pattern = 0.0;//停止に必要な距離
-		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max)pattern = interpolation(*TrainSpeed, m_pattern) + interpolation(*TrainSpeed, m_ErrPatten);
+		double pattern = 0.0;//停止に必要な距離		
+		static double err = 0.0;
+		static double brakeDist = 0.0;
+		if (m_TerminalSafety_b)brakeDist += *DeltaL;
+		else brakeDist = 0.0;
+
+		if (!m_TerminalSafety_b)err = interpolation(*TrainSpeed, m_ErrPatten);
+		else if (brakeDist > err)
+		{
+			if (err > 0)err -= *DeltaL;
+			else err = 0.0;
+		}
+
+		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max)pattern = interpolation(*TrainSpeed, m_pattern) + err;
 		else pattern = *TrainSpeed * *TrainSpeed / m_deceleration;
 		double Approach = *TrainSpeed * *TrainSpeed / m_approach;
 		m_Terminal_Dist -= *DeltaL;

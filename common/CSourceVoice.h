@@ -57,42 +57,42 @@ public:
 	//再生
 	inline HRESULT Start(
 		const UINT32 OperationSet = XAUDIO2_COMMIT_NOW//オペレーションセット（省略可）
-	);
+	) noexcept;
 	//停止
 	inline HRESULT Stop(
 		const UINT32 OperationSet = XAUDIO2_COMMIT_NOW//オペレーションセット（省略可）
-	);
+	) noexcept;
 
 	//音量を0から1の間で設定
 	inline HRESULT SetVolume_0_1(
 		const float vol,//音量（1でオリジナルの音量）
 		const UINT32 OperationSet = XAUDIO2_COMMIT_NOW//オペレーションセット（省略可）
-	) const;
+	) const noexcept;
 	//その他のIXaudio2SourceVoiceに実装されている関数
-	inline  HRESULT DisableEffect(const UINT32 EffectIndex, UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT Discontinuity(void) const;
-	inline 	HRESULT EnableEffect(const UINT32 EffectIndex, UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT ExitLoop(const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	void GetChannelVolumes(const UINT32 Channels, float* pVolumes) const;
-	inline 	HRESULT GetEffectParameters(const UINT32 EffectIndex, void* pParameters, const UINT32 ParametersByteSize) const;
-	inline 	void GetEffectState(const UINT32 EffectIndex, BOOL* pEnabled) const;
-	inline 	void GetFilterParameters(XAUDIO2_FILTER_PARAMETERS* pParameters) const;
-	inline 	void GetFrequencyRatio(float* pRatio) const;
-	inline 	void GetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters) const;
-	inline 	void GetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, float* pLevelMatrix) const;
-	inline 	void GetState(XAUDIO2_VOICE_STATE* pVoiceState, UINT32 Flags = 0U) const;
-	inline 	void GetVoiceDetails(XAUDIO2_VOICE_DETAILS* pVoiceDetails) const;
-	inline 	void GetVolume(float* pVolume) const;
-	inline 	HRESULT SetChannelVolumes(const UINT32 Channels, const float* pVolumes, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT SetEffectChain(const XAUDIO2_EFFECT_CHAIN* pEffectChain) const;
-	inline 	HRESULT SetEffectParameters(const UINT32 EffectIndex, const void* pParameters, const UINT32 ParametersByteSize, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline  HRESULT SetFrequencyRatio(const float ratio, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT SetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT SetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, const float* pLevelMatrix, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
-	inline 	HRESULT SetOutputVoices(const XAUDIO2_VOICE_SENDS* pSendList) const;
-	inline 	HRESULT SetSourceSampleRate(const UINT32 NewSourceSampleRate) const;
-	inline  HRESULT SetVolume(const float vol, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const;
+	inline  HRESULT DisableEffect(const UINT32 EffectIndex, UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT Discontinuity(void) const noexcept;
+	inline 	HRESULT EnableEffect(const UINT32 EffectIndex, UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT ExitLoop(const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	void GetChannelVolumes(const UINT32 Channels, float* pVolumes) const noexcept;
+	inline 	HRESULT GetEffectParameters(const UINT32 EffectIndex, void* pParameters, const UINT32 ParametersByteSize) const noexcept;
+	inline 	void GetEffectState(const UINT32 EffectIndex, BOOL* pEnabled) const noexcept;
+	inline 	void GetFilterParameters(XAUDIO2_FILTER_PARAMETERS* pParameters) const noexcept;
+	inline 	void GetFrequencyRatio(float* pRatio) const noexcept;
+	inline 	void GetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters) const noexcept;
+	inline 	void GetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, float* pLevelMatrix) const noexcept;
+	inline 	void GetState(XAUDIO2_VOICE_STATE* pVoiceState, UINT32 Flags = 0U) const noexcept;
+	inline 	void GetVoiceDetails(XAUDIO2_VOICE_DETAILS* pVoiceDetails) const noexcept;
+	inline 	void GetVolume(float* pVolume) const noexcept;
+	inline 	HRESULT SetChannelVolumes(const UINT32 Channels, const float* pVolumes, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT SetEffectChain(const XAUDIO2_EFFECT_CHAIN* pEffectChain) const noexcept;
+	inline 	HRESULT SetEffectParameters(const UINT32 EffectIndex, const void* pParameters, const UINT32 ParametersByteSize, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline  HRESULT SetFrequencyRatio(const float ratio, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT SetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT SetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, const float* pLevelMatrix, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
+	inline 	HRESULT SetOutputVoices(const XAUDIO2_VOICE_SENDS* pSendList) const noexcept;
+	inline 	HRESULT SetSourceSampleRate(const UINT32 NewSourceSampleRate) const noexcept;
+	inline  HRESULT SetVolume(const float vol, const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) const noexcept;
 protected:
 	//空のコンストラクタ
 	Xaudio2CSourvoiceInterface(nullptr_t p= nullptr) noexcept;
@@ -109,7 +109,7 @@ protected:
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
 	);
 	//デストラクタ
-	virtual ~Xaudio2CSourvoiceInterface();
+	~Xaudio2CSourvoiceInterface() noexcept;
 	IXAudio2* m_pXAudio2 = nullptr;//IXAudio2へのポインタ
 	IXAudio2SourceVoice* m_pSourceVoice = nullptr;//ソースボイスへのポインタ
 	std::vector<BYTE> m_audioData;//音声データを保存する領域
@@ -122,13 +122,13 @@ protected:
 	std::unique_ptr<XAUDIO2_BUFFER> m_pBuffer{ nullptr };//XAUDIO2_BUFFER構造体
 	std::unique_ptr<WAVEFORMATEX> m_pWfx{ nullptr };//ソースボイスに渡す形式
 	bool m_started;//startしてからstopするまでtrue
-	_NODISCARD bool isRunning(void) const;//再生中かどうか
+	_NODISCARD bool isRunning(void) const noexcept;//再生中かどうか
 
 private:
-	inline HRESULT StartInf(const UINT32 OperationSet);//無限ループ時の再生
-	inline HRESULT StartBound(const UINT32 OperationSet);//再生回数有限時の再生
-	inline HRESULT StopInf(const UINT32 OperationSet);//無限ループ時の停止
-	inline HRESULT StopBound(const UINT32 OperationSet);//再生回数有限時の停止
+	inline HRESULT StartInf(const UINT32 OperationSet) noexcept;//無限ループ時の再生
+	inline HRESULT StartBound(const UINT32 OperationSet) noexcept;//再生回数有限時の再生
+	inline HRESULT StopInf(const UINT32 OperationSet) noexcept;//無限ループ時の停止
+	inline HRESULT StopBound(const UINT32 OperationSet) noexcept;//再生回数有限時の停止
 };
 
 class CSourceVoice:Xaudio2CSourvoiceInterface
@@ -189,7 +189,7 @@ public:
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
 	);
 	//デストラクタ
-	~CSourceVoice();
+	~CSourceVoice() noexcept;
 	//コンストラクタと同じ役割をする。
 	inline void reset(nullptr_t p = nullptr) noexcept;
 
@@ -203,7 +203,7 @@ public:
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
-	);
+	) noexcept;
 
 	//コンストラクタと同じ役割をする。
 	inline void reset(
@@ -216,21 +216,21 @@ public:
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
-	);
+	) noexcept;
 	//頭出し
 	inline HRESULT Cue(
 		const UINT32 OperationSet = XAUDIO2_COMMIT_NOW//オペレーションセット（省略可）
-	);
+	) noexcept;
 	//現在の音声の振幅を返す。
 	_NODISCARD inline float getLevel(void) const noexcept;
 	inline explicit operator bool(void) const noexcept;//ソースボイスのポインタが有効かどうかを返す
 	inline constexpr Xaudio2CSourvoiceInterface* operator->() noexcept{	return this;}
-	inline CSourceVoice& operator =(const CSourceVoice& right);//コピー代入
+	inline CSourceVoice& operator =(const CSourceVoice& right) noexcept;//コピー代入
 	inline CSourceVoice& operator =(CSourceVoice&& right) noexcept;//ムーブ代入
 	inline CSourceVoice& operator =(const nullptr_t p) noexcept;//nullptr代入
 	bool operator ==(CSourceVoice& right) noexcept;//比較演算子
 	bool operator !=(CSourceVoice& right) noexcept;//比較演算子
-	_NODISCARD bool isRunning(void);//再生中かどうか
+	_NODISCARD bool isRunning(void)const noexcept;//再生中かどうか
 	bool flag = false;//trueの時に開始するなど（外部から自由に使う）
 private:
 	static constexpr size_t bitPerByte = std::numeric_limits<BYTE>::digits;
@@ -243,7 +243,7 @@ private:
 	);
 };
 
-inline CSourceVoice& CSourceVoice::operator=(const CSourceVoice& right)
+inline CSourceVoice& CSourceVoice::operator=(const CSourceVoice& right) noexcept
 {
 	if (m_started)Stop();
 	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;//代入するため，一旦DestroyVoice
@@ -362,7 +362,7 @@ inline bool CSourceVoice::operator!=(CSourceVoice& right) noexcept
 
 inline void CSourceVoice::reset(IXAudio2* Xau2, FILE* fp, const std::filesystem::path& name, const UINT32 LoopCount,
 	const UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback* const pCallback, XAUDIO2_VOICE_SENDS* const pSendList,
-	XAUDIO2_EFFECT_CHAIN* const pEffectChain)
+	XAUDIO2_EFFECT_CHAIN* const pEffectChain) noexcept
 {
 	if (m_started)Stop();
 	if (m_pSourceVoice)m_pSourceVoice->DestroyVoice(), m_pSourceVoice = nullptr;
@@ -384,7 +384,7 @@ inline void CSourceVoice::reset(IXAudio2* Xau2, FILE* fp, const std::filesystem:
 
 inline void CSourceVoice::reset(IXAudio2* Xau2, const std::filesystem::path& name, const UINT32 LoopCount,
 	const UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback* const pCallback, XAUDIO2_VOICE_SENDS* const pSendList,
-	XAUDIO2_EFFECT_CHAIN* const pEffectChain)
+	XAUDIO2_EFFECT_CHAIN* const pEffectChain) noexcept
 {
 	reset(Xau2, nullptr, name, LoopCount, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
 }
@@ -394,7 +394,7 @@ inline void CSourceVoice::reset(nullptr_t p) noexcept
 	*this = p;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::StartInf(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::StartInf(const UINT32 OperationSet) noexcept
 {
 	if (HRESULT hr = S_OK; m_pSourceVoice)
 	{
@@ -404,7 +404,7 @@ inline HRESULT Xaudio2CSourvoiceInterface::StartInf(const UINT32 OperationSet)
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::StartBound(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::StartBound(const UINT32 OperationSet) noexcept
 {
 	if (HRESULT hr = S_OK; m_pSourceVoice)
 	{
@@ -422,7 +422,7 @@ inline HRESULT Xaudio2CSourvoiceInterface::StartBound(const UINT32 OperationSet)
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::Start(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::Start(const UINT32 OperationSet) noexcept
 {
 	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
 	{
@@ -431,7 +431,7 @@ inline HRESULT Xaudio2CSourvoiceInterface::Start(const UINT32 OperationSet)
 	else return StartBound(OperationSet);
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::StopInf(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::StopInf(const UINT32 OperationSet) noexcept
 {
 	if (HRESULT hr = S_OK; m_pSourceVoice)
 	{
@@ -441,7 +441,7 @@ inline HRESULT Xaudio2CSourvoiceInterface::StopInf(const UINT32 OperationSet)
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::StopBound(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::StopBound(const UINT32 OperationSet) noexcept
 {
 	if (m_pSourceVoice)
 	{
@@ -450,12 +450,12 @@ inline HRESULT Xaudio2CSourvoiceInterface::StopBound(const UINT32 OperationSet)
 			if (SUCCEEDED(hr = m_pSourceVoice->Stop(0U, OperationSet)))m_started = false;
 			else return hr;
 		}
-		return m_pSourceVoice->FlushSourceBuffers();
+		return m_pSourceVoice->FlushSourceBuffers(); 
 	}
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::Stop(const UINT32 OperationSet)
+inline HRESULT Xaudio2CSourvoiceInterface::Stop(const UINT32 OperationSet) noexcept
 {
 	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
 	{
@@ -464,148 +464,148 @@ inline HRESULT Xaudio2CSourvoiceInterface::Stop(const UINT32 OperationSet)
 	else return StopBound(OperationSet);
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetVolume_0_1(const float vol, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetVolume_0_1(const float vol, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetVolume(std::clamp(vol, 0.0f, 1.0f), OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetFrequencyRatio(const float ratio, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetFrequencyRatio(const float ratio, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetFrequencyRatio(ratio, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetVolume(const float vol, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetVolume(const float vol, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetVolume(vol, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::DisableEffect(const UINT32 EffectIndex, UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::DisableEffect(const UINT32 EffectIndex, UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->DisableEffect(EffectIndex, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::Discontinuity(void) const
+inline HRESULT Xaudio2CSourvoiceInterface::Discontinuity(void) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->Discontinuity();
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::EnableEffect(const UINT32 EffectIndex, UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::EnableEffect(const UINT32 EffectIndex, UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->EnableEffect(EffectIndex, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::ExitLoop(const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::ExitLoop(const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->ExitLoop(OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline void Xaudio2CSourvoiceInterface::GetChannelVolumes(const UINT32 Channels, float* pVolumes) const
+inline void Xaudio2CSourvoiceInterface::GetChannelVolumes(const UINT32 Channels, float* pVolumes) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetChannelVolumes(Channels, pVolumes);
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::GetEffectParameters(const UINT32 EffectIndex, void* pParameters, const UINT32 ParametersByteSize) const
+inline HRESULT Xaudio2CSourvoiceInterface::GetEffectParameters(const UINT32 EffectIndex, void* pParameters, const UINT32 ParametersByteSize) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline void Xaudio2CSourvoiceInterface::GetEffectState(const UINT32 EffectIndex, BOOL* pEnabled) const
+inline void Xaudio2CSourvoiceInterface::GetEffectState(const UINT32 EffectIndex, BOOL* pEnabled) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetEffectState(EffectIndex, pEnabled);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS* pParameters) const
+inline void Xaudio2CSourvoiceInterface::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS* pParameters) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetFilterParameters(pParameters);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetFrequencyRatio(float* pRatio) const
+inline void Xaudio2CSourvoiceInterface::GetFrequencyRatio(float* pRatio) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetFrequencyRatio(pRatio);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters) const
+inline void Xaudio2CSourvoiceInterface::GetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetOutputFilterParameters(pDestinationVoice, pParameters);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, float* pLevelMatrix) const
+inline void Xaudio2CSourvoiceInterface::GetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, float* pLevelMatrix) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetState(XAUDIO2_VOICE_STATE* pVoiceState, UINT32 Flags) const
+inline void Xaudio2CSourvoiceInterface::GetState(XAUDIO2_VOICE_STATE* pVoiceState, UINT32 Flags) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetState(pVoiceState,Flags);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetVoiceDetails(XAUDIO2_VOICE_DETAILS* pVoiceDetails) const
+inline void Xaudio2CSourvoiceInterface::GetVoiceDetails(XAUDIO2_VOICE_DETAILS* pVoiceDetails) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetVoiceDetails(pVoiceDetails);
 }
 
-inline void Xaudio2CSourvoiceInterface::GetVolume(float* pVolume) const
+inline void Xaudio2CSourvoiceInterface::GetVolume(float* pVolume) const noexcept
 {
 	if (m_pSourceVoice)m_pSourceVoice->GetVolume(pVolume);
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetChannelVolumes(const UINT32 Channels, const float* pVolumes, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetChannelVolumes(const UINT32 Channels, const float* pVolumes, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetChannelVolumes(Channels, pVolumes, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetEffectChain(const XAUDIO2_EFFECT_CHAIN* pEffectChain) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetEffectChain(const XAUDIO2_EFFECT_CHAIN* pEffectChain) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetEffectChain(pEffectChain);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetEffectParameters(const UINT32 EffectIndex, const void* pParameters, const UINT32 ParametersByteSize, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetEffectParameters(const UINT32 EffectIndex, const void* pParameters, const UINT32 ParametersByteSize, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetFilterParameters(pParameters, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetOutputFilterParameters(IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, const float* pLevelMatrix, const UINT32 OperationSet) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetOutputMatrix(IXAudio2Voice* pDestinationVoice, const UINT32 SourceChannels, const UINT32 DestinationChannels, const float* pLevelMatrix, const UINT32 OperationSet) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetOutputVoices(const XAUDIO2_VOICE_SENDS* pSendList) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetOutputVoices(const XAUDIO2_VOICE_SENDS* pSendList) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetOutputVoices(pSendList);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-inline HRESULT Xaudio2CSourvoiceInterface::SetSourceSampleRate(const UINT32 NewSourceSampleRate) const
+inline HRESULT Xaudio2CSourvoiceInterface::SetSourceSampleRate(const UINT32 NewSourceSampleRate) const noexcept
 {
 	if (m_pSourceVoice)return m_pSourceVoice->SetSourceSampleRate(NewSourceSampleRate);
 	else return XAUDIO2_E_INVALID_CALL;
 }
 
-_NODISCARD inline bool Xaudio2CSourvoiceInterface::isRunning() const
+_NODISCARD inline bool Xaudio2CSourvoiceInterface::isRunning() const noexcept
 {
 	if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
 	{
@@ -619,12 +619,12 @@ _NODISCARD inline bool Xaudio2CSourvoiceInterface::isRunning() const
 	}
 }
 
-inline bool CSourceVoice::isRunning()
+inline bool CSourceVoice::isRunning() const noexcept
 {
 	return Xaudio2CSourvoiceInterface::isRunning();
 }
 
-inline HRESULT CSourceVoice::Cue(const UINT32 OperationSet)
+inline HRESULT CSourceVoice::Cue(const UINT32 OperationSet) noexcept
 {
 	if (HRESULT hr = S_OK; m_pSourceVoice)
 	{

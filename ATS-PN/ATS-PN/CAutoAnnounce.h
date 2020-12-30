@@ -35,11 +35,11 @@ class CAutoAnnounce
 {
 public:
 	CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr);
-	~CAutoAnnounce();
+	~CAutoAnnounce() noexcept;
 	void setTrainNo(int);
-	inline void Running(const double,const int);
-	inline void Halt(const int);
-	inline void DoorCls(void);
+	inline void Running(const double,const int) noexcept;
+	inline void Halt(const int) noexcept;
+	inline void DoorCls(void) noexcept;
 	float micGauge;
 
 private:
@@ -67,7 +67,7 @@ private:
 
 
 
-inline void CAutoAnnounce::Running(const double loc, const int time)
+inline void CAutoAnnounce::Running(const double loc, const int time) noexcept
 {
 	static int time_pre = 0;//前フレームの時刻
 	int delT = 0;//1フレームの時間
@@ -91,13 +91,13 @@ inline void CAutoAnnounce::Running(const double loc, const int time)
 }
 
 
-inline void CAutoAnnounce::Halt(const int no)
+inline void CAutoAnnounce::Halt(const int no) noexcept
 {
 	if (!m_set_no)m_set_no = true;
 	m_staNo = no;
 }
 
-inline void CAutoAnnounce::DoorCls(void)
+inline void CAutoAnnounce::DoorCls(void) noexcept
 {
 	//	m_LocationOrigin = m_Location;//駅発車時の位置を登録（出発後の放送に使用）
 	if (m_set_no)//始発駅以外

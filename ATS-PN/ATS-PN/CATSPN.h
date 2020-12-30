@@ -26,25 +26,25 @@ public:
 	//パターン読み込み
 	void loadPattern(std::filesystem::path module_dir);
 	// 初期化
-	void initATSPN(void);
+	void initATSPN(void)noexcept;
 	//リセットボタン
-	void resetATSPN(void);
+	void resetATSPN(void)noexcept;
 	//PN制御実行
-	void RunPNcontrol(void);
+	void RunPNcontrol(void)noexcept;
 	// 駅通防止
-	void haltON(int);
-	void stopPattern(int);
-	void halt(void);
-	void haltOFF(void);
+	void haltON(int)noexcept;
+	void stopPattern(int)noexcept;
+	void halt(void)noexcept;
+	void haltOFF(void)noexcept;
 	// 線区最高速度
-	void LineMax(int);
+	void LineMax(int)noexcept;
 	// 速度制限区間
-	void LimitSpeedON(int);
-	void LimitSpeed(void);
-	void LimitSpeedOFF(void);
+	void LimitSpeedON(int)noexcept;
+	void LimitSpeed(void)noexcept;
+	void LimitSpeedOFF(void)noexcept;
 	// 終端防護（非常指令）
-	void TerminalSafetyON(int);
-	void TerminalSafety(void);
+	void TerminalSafetyON(int)noexcept;
+	void TerminalSafety(void)noexcept;
 	//速度
 	float* TrainSpeed = nullptr;
 	//前回との時刻の差
