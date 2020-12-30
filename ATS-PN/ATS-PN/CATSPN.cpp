@@ -4,7 +4,7 @@
 void CATSPN::loadPattern(std::filesystem::path module_dir)
 {
 	makeTableFromCsv(module_dir / L"AtsPnPattern.csv", &m_pattern);
-	m_pattern_Max = m_pattern.back().first;
+	if (!m_pattern.empty())m_pattern_Max = m_pattern.back().first;
 	makeTableFromCsv(module_dir / L"AtsPnErrPattern.csv", &m_ErrPatten);
 	if (m_ErrPatten.empty())m_ErrPatten.emplace_back(0.0f, 0.0);
 }

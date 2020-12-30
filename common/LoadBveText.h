@@ -18,6 +18,16 @@ template <typename T>void cleanUpBveStr(std::basic_string<T>* StrIn, const std::
 	}
 }
 
+template <>inline void cleanUpBveStr<char>(std::basic_string<char>* StrIn, const std::locale& _loc)
+{
+	if (!StrIn->empty())
+	{
+		size_t comment;
+		comment = StrIn->find_first_of(";#");
+		if (comment != std::basic_string<char>::npos)StrIn->erase(StrIn->cbegin() + comment, StrIn->cend());
+	}
+}
+
 //文字列の初めと終わりのスペースやタブを削除する。
 template<typename T>void eraseSpace(std::basic_string<T>* _src, const std::locale& _loc = std::locale())
 {
@@ -28,12 +38,12 @@ template<typename T>void eraseSpace(std::basic_string<T>* _src, const std::local
 	}
 }
 
-template <typename T>void splitSymbol(const char& symbol,const std::basic_string<T>& _src, std::basic_string<T>* _left, std::basic_string<T>* _right, const std::locale& _loc = std::locale())
+template <typename T>void splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>* _left, std::basic_string<T>* _right, const std::locale& _loc = std::locale())
 {
 	if (!_src.empty())
 	{
 		size_t pos;
-		pos = _src.find_first_of(std::use_facet<std::ctype<T>>(_loc).widen(symbol));
+		pos = _src.find_first_of(symbol);
 		*_left = _src.substr(0, pos);
 		*_right = _src.substr(pos + 1);
 		eraseSpace(_left, _loc);
@@ -47,9 +57,29 @@ template <typename T>void splitCsvColumn(const std::basic_string<T>& loadline, s
 	if (!loadline.empty())
 	{
 		size_t begin = 0, comma = 0;
+		T commaWiden = std::use_facet<std::ctype<T>>(_loc).widen(',');
 		while (comma < loadline.length())
 		{
-			if (loadline.at(comma) == std::use_facet<std::ctype<T>>(_loc).widen(','))
+			if (loadline.at(comma) == commaWiden)
+			{
+				columun->emplace_back(loadline.substr(begin, comma - begin));
+				begin = comma + 1;
+			}
+			comma++;
+		}
+		if (begin < loadline.length()) columun->emplace_back(loadline.substr(begin));
+		for (auto& a : *columun)eraseSpace(&a, _loc);
+	}
+}
+
+template <>inline void splitCsvColumn<char>(const std::basic_string<char>& loadline, std::vector<std::basic_string<char>>* columun, const std::locale& _loc)
+{
+	if (!loadline.empty())
+	{
+		size_t begin = 0, comma = 0;
+		while (comma < loadline.length())
+		{
+			if (loadline.at(comma) == ',')
 			{
 				columun->emplace_back(loadline.substr(begin, comma - begin));
 				begin = comma + 1;
@@ -62,7 +92,7 @@ template <typename T>void splitCsvColumn(const std::basic_string<T>& loadline, s
 }
 
 //大文字と小文字を区別しない文字比較(等しいときにtrue)
-template <typename T>bool icasecmp(const std::basic_string<T>& x, const std::basic_string<T>& y, const std::locale& _loc=std::locale())
+template <typename T>bool icasecmp(const std::basic_string<T>& x, const std::basic_string<T>& y, const std::locale& _loc = std::locale())
 {
 	if (!x.empty() && !y.empty())
 	{

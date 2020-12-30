@@ -94,13 +94,13 @@ private:
 	//駅通防止停止距離
 	double m_halt_dist = 0.0;
 	//速度制限速度
-	float m_LimitSpeed_Speed = 0.0f;
+	float m_LimitSpeed_Speed = std::numeric_limits<float>::max();
 	//速度制限開始距離
 	double m_LimitSpeed_dist = 0.0;
 	//終端防護距離
 	double m_Terminal_Dist = 0.0;
 	//線区最高速度
-	double m_Line_Max_Speed = 0.0;
+	double m_Line_Max_Speed = std::numeric_limits<float>::max();
 	//駅通防止チャイム（駅に移動対策）
 //	int m_haltchime;
 	//駅通防止チャイム再生済み
@@ -118,7 +118,7 @@ private:
 	//ブレーキパターン
 	std::vector<DISTANCE_SET> m_pattern;
 	//ブレーキパターンの最大速度
-	float m_pattern_Max = 0.0f;
+	float m_pattern_Max = std::numeric_limits<float>::max();
 	//ブレーキパターンの誤差
 	std::vector<DISTANCE_SET> m_ErrPatten;
 
