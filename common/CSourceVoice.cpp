@@ -151,16 +151,15 @@ HRESULT CSourceVoice::CreateSourceVoice(const std::filesystem::path& name, FILE*
 	//初期化ログの書き出し
 	if (FAILED(hr))//このモータ音が見つからないまたは何らかの理由でソースボイスが作成できない。
 	{
-		if (fp)fprintf_s(fp, reinterpret_cast<const char*>(u8"ソースボイスの作成失敗\r\nエラー:%#X\r\n"), hr);
-		if (fp)fprintf_s(fp, reinterpret_cast<const char*>(u8"ファイル名：%ls\r\n"), name.c_str());
-		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
-//		SAFE_DELETE(*pCSourceVoice);
+		if (fp)fwprintf_s(fp, L"ソースボイスの作成失敗\nエラー:%#X\n", hr);
+		if (fp)fwprintf_s(fp, L"ファイル名：%s\n", name.c_str());
+		//						fprintf_s(fp1, L"アドレス：%p\r\n", motornoise[i]);
 	}
 	else//このモーター音のソースボイスを作成できた。
 	{
-		if (fp)fprintf_s(fp, reinterpret_cast<const char*>(u8"ソースボイスの作成成功\r\n"));
-		if (fp)fprintf_s(fp, reinterpret_cast<const char*>(u8"ファイル名：%ls\r\n"), name.c_str());
-		//						fwprintf_s(fp1, L"アドレス：%p\n", motornoise[i]);
+		if (fp)fwprintf_s(fp, L"ソースボイスの作成成功\n");
+		if (fp)fwprintf_s(fp, L"ファイル名：%s\n", name.c_str());
+		//						fprintf_s(fp1, L"アドレス：%p\r\n", motornoise[i]);
 	}
 	return hr;
 }
