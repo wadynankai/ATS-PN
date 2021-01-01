@@ -38,17 +38,21 @@ template<typename T>void eraseSpace(std::basic_string<T>* _src, const std::local
 	}
 }
 
-template <typename T>void splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>* _left, std::basic_string<T>* _right, const std::locale& _loc = std::locale())
+template <typename T>size_t splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>* _left, std::basic_string<T>* _right, const std::locale& _loc = std::locale())
 {
+	size_t pos = std::basic_string<T>::npos;
 	if (!_src.empty())
 	{
-		size_t pos;
 		pos = _src.find_first_of(symbol);
-		*_left = _src.substr(0, pos);
-		*_right = _src.substr(pos + 1);
-		eraseSpace(_left, _loc);
-		eraseSpace(_right, _loc);
+		if (pos != std::basic_string<T>::npos)
+		{
+			*_left = _src.substr(0, pos);
+			*_right = _src.substr(pos + 1);
+			eraseSpace(_left, _loc);
+			eraseSpace(_right, _loc);
+		}
 	}
+	return pos;
 }
 
 //csvÇÃçsÇï™äÑÇ∑ÇÈÅB
