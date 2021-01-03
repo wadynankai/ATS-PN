@@ -116,11 +116,17 @@ private:
 	//終端防護ブレーキ
 	bool m_TerminalSafety_b = false;
 	//ブレーキパターン
-	std::vector<DISTANCE_SET> m_pattern;
+	std::vector<DISTANCE_SET> m_pattern{};
+	//現在の速度からの停止距離
+	double m_stopDist = 0.0;
+	//制限速度からの停止距離
+	double m_stopDistFromLimit = 0.0;
 	//ブレーキパターンの最大速度
 	float m_pattern_Max = std::numeric_limits<float>::max();
 	//ブレーキパターンの誤差
-	std::vector<DISTANCE_SET> m_ErrPatten;
+	std::vector<DISTANCE_SET> m_ErrPatten{};
+	//現在の誤差
+	double m_CurrentErr = 0.0;
 
 	static constexpr float m_deceleration = 3.7f * 7.2f;//減速定数（減速度[km/h/s] x 7.2）
 	static constexpr float m_approach = m_deceleration * 0.5f;//P接近表示条件
