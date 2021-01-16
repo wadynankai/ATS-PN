@@ -72,13 +72,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>D:\Favorites\mackoy\BveTs5\Scenarios\wadynankai\nankai1000\</OutDir>
+    <OutDir>D:\Favorites\mackoy\BveTs5\Scenarios\wadynankai\nankai50000\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)$(Platform)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;</IncludePath>
-    <OutDir>D:\Favorites\mackoy\BveTs5\Scenarios\wadynankai\nankai1000\</OutDir>
+    <OutDir>D:\Favorites\mackoy\BveTs5\Scenarios\wadynankai\nankai50000\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -189,7 +189,6 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\common\CSourceVoice.cpp" />
     <ClCompile Include="ATS-PN.cpp" />
     <ClCompile Include="CATSPN.cpp" />
     <ClCompile Include="CAutoAnnounce.cpp" />

@@ -7,38 +7,38 @@
 #include <algorithm>
 
 //「;」もしくは「#」から始まるコメントを削除する。
-template <typename T>void cleanUpBveStr(std::basic_string<T>* StrIn, const std::locale& _loc = std::locale())
+template <typename T>void cleanUpBveStr(std::basic_string<T>& StrIn, const std::locale& _loc = std::locale())
 {
-	if (!StrIn->empty())
+	if (!StrIn.empty())
 	{
 		size_t comment;
 		const T temp[] = { std::use_facet<std::ctype<T>>(_loc).widen(';'),std::use_facet<std::ctype<T>>(_loc).widen('#') };
-		comment = StrIn->find_first_of(temp);
-		if (comment != std::basic_string<T>::npos)StrIn->erase(StrIn->cbegin() + comment, StrIn->cend());
+		comment = StrIn.find_first_of(temp);
+		if (comment != std::basic_string<T>::npos)StrIn.erase(StrIn.cbegin() + comment, StrIn.cend());
 	}
 }
 
-template <>inline void cleanUpBveStr<char>(std::basic_string<char>* StrIn, const std::locale& _loc)
+template <>inline void cleanUpBveStr<char>(std::basic_string<char>& StrIn, const std::locale& _loc)
 {
-	if (!StrIn->empty())
+	if (!StrIn.empty())
 	{
 		size_t comment;
-		comment = StrIn->find_first_of(";#");
-		if (comment != std::basic_string<char>::npos)StrIn->erase(StrIn->cbegin() + comment, StrIn->cend());
+		comment = StrIn.find_first_of(";#");
+		if (comment != std::basic_string<char>::npos)StrIn.erase(StrIn.cbegin() + comment, StrIn.cend());
 	}
 }
 
 //文字列の初めと終わりのスペースやタブを削除する。
-template<typename T>void eraseSpace(std::basic_string<T>* _src, const std::locale& _loc = std::locale())
+template<typename T>void eraseSpace(std::basic_string<T>& _src, const std::locale& _loc = std::locale())
 {
-	if (!_src->empty())
+	if (!_src.empty())
 	{
-		while (std::isspace(_src->front(), _loc))_src->erase(_src->cbegin());
-		while (std::isspace(_src->back(), _loc))_src->pop_back();
+		while (std::isspace(_src.front(), _loc))_src.erase(_src.cbegin());
+		while (std::isspace(_src.back(), _loc))_src.pop_back();
 	}
 }
 
-template <typename T>size_t splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>* _left, std::basic_string<T>* _right, const std::locale& _loc = std::locale())
+template <typename T>size_t splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>&_left, std::basic_string<T>& _right, const std::locale& _loc = std::locale())
 {
 	size_t pos = std::basic_string<T>::npos;
 	if (!_src.empty())
@@ -46,8 +46,8 @@ template <typename T>size_t splitSymbol(const T& symbol, const std::basic_string
 		pos = _src.find_first_of(symbol);
 		if (pos != std::basic_string<T>::npos)
 		{
-			*_left = _src.substr(0, pos);
-			*_right = _src.substr(pos + 1);
+			_left = _src.substr(0, pos);
+			_right = _src.substr(pos + 1);
 			eraseSpace(_left, _loc);
 			eraseSpace(_right, _loc);
 		}
@@ -56,7 +56,7 @@ template <typename T>size_t splitSymbol(const T& symbol, const std::basic_string
 }
 
 //csvの行を分割する。
-template <typename T>void splitCsvColumn(const std::basic_string<T>& loadline, std::vector<std::basic_string<T>>* columun, const std::locale& _loc = std::locale())
+template <typename T>void splitCsvColumn(const std::basic_string<T>& loadline, std::vector<std::basic_string<T>>& columun, const std::locale& _loc = std::locale())
 {
 	if (!loadline.empty())
 	{
@@ -66,17 +66,20 @@ template <typename T>void splitCsvColumn(const std::basic_string<T>& loadline, s
 		{
 			if (loadline.at(comma) == commaWiden)
 			{
-				columun->emplace_back(loadline.substr(begin, comma - begin));
+				columun.emplace_back(loadline.substr(begin, comma - begin));
 				begin = comma + 1;
 			}
 			comma++;
 		}
-		if (begin < loadline.length()) columun->emplace_back(loadline.substr(begin));
-		for (auto& a : *columun)eraseSpace(&a, _loc);
+		if (begin < loadline.length()) columun.emplace_back(loadline.substr(begin));
+		for (auto& a : columun)
+		{
+			eraseSpace(a, _loc);
+		}
 	}
 }
 
-template <>inline void splitCsvColumn<char>(const std::basic_string<char>& loadline, std::vector<std::basic_string<char>>* columun, const std::locale& _loc)
+template <>inline void splitCsvColumn<char>(const std::basic_string<char>& loadline, std::vector<std::basic_string<char>>& columun, const std::locale& _loc)
 {
 	if (!loadline.empty())
 	{
@@ -85,13 +88,16 @@ template <>inline void splitCsvColumn<char>(const std::basic_string<char>& loadl
 		{
 			if (loadline.at(comma) == ',')
 			{
-				columun->emplace_back(loadline.substr(begin, comma - begin));
+				columun.emplace_back(loadline.substr(begin, comma - begin));
 				begin = comma + 1;
 			}
 			comma++;
 		}
-		if (begin < loadline.length()) columun->emplace_back(loadline.substr(begin));
-		for (auto& a : *columun)eraseSpace(&a, _loc);
+		if (begin < loadline.length()) columun.emplace_back(loadline.substr(begin));
+		for (auto& a : columun)
+		{
+			eraseSpace(a, _loc);
+		}
 	}
 }
 

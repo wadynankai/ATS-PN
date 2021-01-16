@@ -59,9 +59,6 @@
     <ClCompile Include="ATS-PN.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\common\CSourceVoice.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">

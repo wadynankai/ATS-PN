@@ -14,9 +14,9 @@ inline void CDoorcontrol::loadconfig(void)
 		{
 			std::wstring loadline;
 			std::getline(Config, loadline);
-			cleanUpBveStr(&loadline, Config.getloc());
+			cleanUpBveStr(loadline, Config.getloc());
 			std::wstring left, right;
-			if (splitSymbol(L'=', loadline, &left, &right, Config.getloc()) != std::wstring::npos)
+			if (splitSymbol(L'=', loadline, left, right, Config.getloc()) != std::wstring::npos)
 			{
 				if (icasecmp(left, L"Close Left", Config.getloc()))DoorClsL_name = m_module_dir / right;
 				else if (icasecmp(left, L"Close Right", Config.getloc()))DoorClsR_name = m_module_dir / right;
@@ -68,11 +68,11 @@ void CDoorcontrol::setTrainNo(const int no)
 			std::string loadline;
 			std::getline(table, loadline);
 			std::vector<std::string> columun;
-			cleanUpBveStr(&loadline, table.getloc());
-			eraseSpace(&loadline, table.getloc());
+			cleanUpBveStr(loadline, table.getloc());
+			eraseSpace(loadline, table.getloc());
 			if (!loadline.empty())
 			{
-				splitCsvColumn(loadline, &columun, table.getloc());
+				splitCsvColumn(loadline, columun, table.getloc());
 				if (std::stoi(columun.at(0)) == m_trainNo&& columun.size()>=3)
 				{
 					if (!columun.at(1).empty() && (std::all_of(columun.at(1).cbegin(), columun.at(1).cend(), isdigit)))m_nambaTrack = std::stoi(columun.at(1));

@@ -6,8 +6,8 @@
 // Called when this plug-in is loaded
 ATS_API void Load(void)
 {
-	makeTableFromCsv(g_module_dir / L"AtsPnPattern.csv",&g_vecPattern);
-	makeTableFromCsv(g_module_dir / L"AtsPnErrPattern.csv", &g_vecErrPatten);
+	makeTableFromCsv(g_module_dir / L"AtsPnPattern.csv",g_vecPattern);
+	makeTableFromCsv(g_module_dir / L"AtsPnErrPattern.csv", g_vecErrPatten);
 }
 
 // Called when this plug-in is unloaded

@@ -7,13 +7,24 @@ ATS_API void WINAPI Load(void)
 	g_pncontrol.TrainSpeed = &g_TrainSpeed;
 	g_pncontrol.DeltaT = &g_deltaT;
 	g_pncontrol.DeltaL = &g_deltaL;
-	g_pncontrol.loadPattern(g_module_dir);
+	try
+	{
+		g_pncontrol.loadPattern(g_module_dir);
+	}
+	catch (const std::exception& exp)
+	{
+		std::wstring wstr(L"PNパターン読み込み時に例外発生\r\n");
+		wchar_t what[MAX_PATH];
+		mbstowcs_s(nullptr, what, exp.what(), _countof(what));
+		wstr += what;
+		MessageBox(nullptr, wstr.c_str(), L"ATS-PN.dll", MB_OK);
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 // Called when this plug-in is unloaded
 ATS_API void WINAPI Dispose(void)
 {
-
 	g_door.reset();//これがないと終了時エラーになる。
 	g_announce.reset();//これがないと終了時エラーになる。
 	if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;
@@ -41,6 +52,7 @@ ATS_API void WINAPI Initialize(int brake)
 // Called every frame
 ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int* panel, int* sound)
 {
+	ATS_HANDLES ret = { 0 };//出力
 	static bool l_pause = false;//trueのときに音を止める（ローカル変数）
 	if (l_pause && pXAudio2)pXAudio2->StartEngine(), l_pause = false;
 	if (GetKeyState('P') & 0x80)l_pause = true;
@@ -87,19 +99,19 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int* panel, int
 		panel[213] = static_cast<int>(g_announce->micGauge * 10.0f);
 	}
 
-	g_output.Reverser = g_Reverser;
-	g_output.Power = g_Power;
-	g_output.Brake = g_Brake;//正常時
-	if (g_pncontrol.emgBrake)g_output.Brake = g_emgBrake;//非常指令
-	else if (g_pncontrol.svcBrake && g_output.Brake != g_emgBrake)g_output.Brake = g_svcBrake;//常用最大指令
-	g_output.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
+	ret.Reverser = g_Reverser;
+	ret.Power = g_Power;
+	ret.Brake = g_Brake;//正常時
+	if (g_pncontrol.emgBrake)ret.Brake = g_emgBrake;//非常指令
+	else if (g_pncontrol.svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
+	ret.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
 
 	if (l_pause)//ポーズのとき
 	{
 		if (pXAudio2)pXAudio2->StopEngine();
 	}
 
-	return g_output;
+	return ret;
 }
 
 // Called when the power is changed
@@ -150,15 +162,24 @@ ATS_API void WINAPI HornBlow(int hornType)
 ATS_API void WINAPI DoorOpen(void)
 {
 	g_pncontrol.haltOFF();
-	if (g_door)g_door->DoorOpn();
+	if (g_door)
+	{
+		g_door->DoorOpn();
+	}
 }
 
 // Called when the door is closed
 ATS_API void WINAPI DoorClose(void)
 {
 	g_pncontrol.haltOFF();
-	if (g_door)g_door->DoorCls();
-	if (g_announce)g_announce->DoorCls();
+	if (g_door)
+	{
+		g_door->DoorCls();
+	}
+	if (g_announce)
+	{
+		g_announce->DoorCls();
+	}
 }
 
 // Called when current signal is changed
@@ -194,32 +215,68 @@ ATS_API void WINAPI SetBeaconData(ATS_BEACONDATA beaconData)
 		break;
 	case PN_Beacon::Timetable:
 		g_timetable = beaconData.Optional % 1000;
-		if (g_door)g_door->setTrainNo(g_timetable);
+		if (g_door)
+		{
+			g_door->setTrainNo(g_timetable);
+		}
 		else
 		{
-			HRESULT hr;
-			if (FAILED(hr = XAudio2Create(pXAudio2.put(), 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
+			try
 			{
-				pXAudio2 = nullptr;
-			}
-			else
-			{
-				if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
+				HRESULT hr;
+				if (FAILED(hr = XAudio2Create(pXAudio2.put(), 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
 				{
-					if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
-					pXAudio2 = nullptr;//XAudio2をやめる
+					pXAudio2 = nullptr;
+				}
+				else
+				{
+					if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
+					{
+						if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
+						pXAudio2 = nullptr;//XAudio2をやめる
+					}
+				}
+				g_door = std::make_unique<CDoorcontrol>(g_module_dir, pXAudio2.get());
+				if (g_door)
+				{
+					g_door->setTrainNo(g_timetable);
 				}
 			}
-			g_door = std::make_unique<CDoorcontrol>(g_module_dir, pXAudio2.get());
-			if (g_door)g_door->setTrainNo(g_timetable);
+			catch (const std::exception& exp)
+			{
+				std::wstring wstr(L"ドア機能読み込み時に例外発生\r\n");
+				wchar_t what[MAX_PATH];
+				mbstowcs_s(nullptr, what, exp.what(), _countof(what));
+				wstr += what;
+				MessageBox(nullptr, wstr.c_str(), L"ATS-PN.dll", MB_OK);
+				std::exit(EXIT_FAILURE);
+			}
 		}
 		if (beaconData.Optional >= 1000)
 		{
-			if (g_announce)g_announce->setTrainNo(beaconData.Optional);
-			else
+			try
 			{
-				g_announce = std::make_unique<CAutoAnnounce>(g_module_dir, pXAudio2.get());
-				if (g_announce)g_announce->setTrainNo(beaconData.Optional);
+				if (g_announce)
+				{
+					g_announce->setTrainNo(beaconData.Optional);
+				}
+				else
+				{
+					g_announce = std::make_unique<CAutoAnnounce>(g_module_dir, pXAudio2.get());
+					if (g_announce)
+					{
+						g_announce->setTrainNo(beaconData.Optional);
+					}
+				}
+			}
+			catch (const std::exception& exp)
+			{
+				std::wstring wstr(L"自動放送読み込み時に例外発生\r\n");
+				wchar_t what[MAX_PATH];
+				mbstowcs_s(nullptr, what, exp.what(), _countof(what));
+				wstr += what;
+				MessageBox(nullptr, wstr.c_str(), L"ATS-PN.dll", MB_OK);
+				std::exit(EXIT_FAILURE);
 			}
 		}
 		break;

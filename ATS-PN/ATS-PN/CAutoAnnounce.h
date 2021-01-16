@@ -40,7 +40,7 @@ public:
 	inline void Running(const double,const int) noexcept;
 	inline void Halt(const int) noexcept;
 	inline void DoorCls(void) noexcept;
-	float micGauge;
+	float micGauge = 0.0f;
 
 private:
 	std::filesystem::path m_module_dir;//プラグインのディレクトリ
@@ -52,9 +52,9 @@ private:
 //	double m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
 	bool m_set_no = false;//一度でも105番地上子を踏んだことがあったらtrue
 	bool m_pilotLamp = false;//ドアが閉まっていたらtrue
-	AnnounceSet m_first;//始発駅の設定を保存
+	AnnounceSet m_first{};//始発駅の設定を保存
 	std::vector<AnnounceSet> m_A_Set;//始発駅以外の設定を保存
-	AnnounceMode m_AnnounceMode;
+	AnnounceMode m_AnnounceMode{ AnnounceMode::Commuter };
 	double m_A_Loc1 = std::numeric_limits<double>::max();//出発放送の距離程を保存
 	double m_A_Loc2 = std::numeric_limits<double>::max();//到着放送の距離程を保存
 
@@ -114,13 +114,22 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				{
 					m_Announce1.reset(m_pXAudio2, a.name1, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
 				}
-				else m_Announce1.reset(nullptr);//前の放送を消去
+				else
+				{
+					m_Announce1.reset(nullptr);//前の放送を消去
+				}
 				if (!a.name2.empty())
 				{
 					m_Announce2.reset(m_pXAudio2, a.name2, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
 				}
-				else m_Announce2.reset();//前の放送を消去
-				if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+				else
+				{
+					m_Announce2.reset();//前の放送を消去
+				}
+				if (mfStarted)
+				{				
+					MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+				}
 				switch (a.mode)//出発後放送の位置を登録
 				{
 				case AnnounceMode::Commuter:
@@ -150,9 +159,18 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 		bool mfStarted = false;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
 		hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
 		mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
-		if (!m_first.name1.empty())m_Announce1.reset(m_pXAudio2, m_first.name1, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
-		if (!m_first.name2.empty())m_Announce2.reset(m_pXAudio2, m_first.name2, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
-		if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+		if (!m_first.name1.empty())
+		{
+			m_Announce1.reset(m_pXAudio2, m_first.name1, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
+		}
+		if (!m_first.name2.empty())
+		{
+			m_Announce2.reset(m_pXAudio2, m_first.name2, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
+		}
+		if (mfStarted)
+		{
+			MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+		}
 		switch (m_first.mode)//出発後放送の位置を登録
 		{
 		case AnnounceMode::Commuter:

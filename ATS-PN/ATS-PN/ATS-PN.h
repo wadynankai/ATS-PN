@@ -58,9 +58,8 @@ inline winrt::com_ptr<IXAudio2> pXAudio2;
 inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
 inline std::filesystem::path g_module_dir;
 inline CATSPN g_pncontrol;
-inline std::unique_ptr<CDoorcontrol> g_door;
-inline std::unique_ptr<CAutoAnnounce> g_announce;
+inline std::unique_ptr<CDoorcontrol> g_door{ nullptr };
+inline std::unique_ptr<CAutoAnnounce> g_announce{ nullptr };
 
-inline ATS_HANDLES g_output;//èoóÕ
 
 #endif // !_ATS_PN_INCLUDED_
