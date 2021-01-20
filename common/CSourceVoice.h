@@ -483,6 +483,7 @@ public:
 				std::vector<float> temp;
 				temp.emplace_back(getSampleAvg(sample));
 				size_t sampleNum200Hz = m_pWfx->nSamplesPerSec / 200;
+#pragma loop(hint_parallel(8))
 				for (size_t i = 0; i < sampleNum200Hz; ++i)
 				{
 					if (sample < i * m_pWfx->nChannels)break;//インデックスが0になってしまう場合，そこで終了

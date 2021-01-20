@@ -83,6 +83,7 @@ template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 	const U& index_list = {1}//csvファイルで読み込む列のリスト
 )
 {
+	table.clear();
 	table.resize(index_list.size());
 	std::ifstream csv(name);
 	if (csv.is_open())
@@ -119,7 +120,6 @@ template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 		}
 	}
 	csv.close();
-
 	for (auto& a : table)
 	{
 		if (!a.empty())
@@ -147,10 +147,22 @@ template <typename X, typename Y> _NODISCARD inline constexpr Y slope(const std:
 	return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
 }
 
+//2点間を通る直線の傾き
+template <typename X, typename Y> _NODISCARD inline constexpr Y slope(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+{
+	return (y2 - y1) / (static_cast<Y>(x2) - static_cast<Y>(x1));
+}
+
 //2点間を通る直線のy切片
 template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return -slope(p1, p2) * static_cast<Y>(p1.first) + p1.second;
+}
+
+//2点間を通る直線のy切片
+template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+{
+	return -slope(x1, y1, x2, y2) * static_cast<Y>(x1) + x2;
 }
 
 //2点間を通る直線の方程式(first:傾き，second:y切片)
@@ -158,6 +170,13 @@ template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y,
 {
 	return { slope(p1,p2),intercept(p1,p2) };
 }
+
+//2点間を通る直線の方程式(first:傾き，second:y切片)
+template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y, Y> linear(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+{
+	return { slope(x1, y1, x2, y2), intercept(x1, y1, x2, y2) };
+}
+
 
 
 //線形補間

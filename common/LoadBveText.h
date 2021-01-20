@@ -12,7 +12,7 @@ template <typename T>void cleanUpBveStr(std::basic_string<T>& StrIn, const std::
 	if (!StrIn.empty())
 	{
 		size_t comment;
-		const T temp[] = { std::use_facet<std::ctype<T>>(_loc).widen(';'),std::use_facet<std::ctype<T>>(_loc).widen('#') };
+		const T temp[] = { std::use_facet<std::ctype<T>>(_loc).widen(';'),std::use_facet<std::ctype<T>>(_loc).widen('#') ,std::use_facet<std::ctype<T>>(_loc).widen('\0') };
 		comment = StrIn.find_first_of(temp);
 		if (comment != std::basic_string<T>::npos)StrIn.erase(StrIn.cbegin() + comment, StrIn.cend());
 	}
