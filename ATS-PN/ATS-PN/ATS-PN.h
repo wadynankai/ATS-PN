@@ -25,6 +25,7 @@
 #include "CATSPN.h"
 #include "CDoorcontrol.h"
 #include "CAutoAnnounce.h"
+#include "CTraponBackGround.h"
 
 namespace PN_Beacon
 {
@@ -53,13 +54,26 @@ inline int g_StopSta;//停車駅名
 inline int g_AstTimer;//アスタリスク点滅タイマー
 inline bool g_Aster;//アスタリスク
 inline int g_timetable = 0;//時刻表
+inline bool g_delete_push = false;//Deleteが押されている間True
+inline bool g_ICcard_insert = false;//ICカード挿入状態
+
+inline CTraponBackGround g_TraponBackGround;//トラポン背景の出力
 
 inline winrt::com_ptr<IXAudio2> pXAudio2;
 inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
 inline std::filesystem::path g_module_dir;
+inline CSourceVoice g_Ding;
+inline bool g_Space = false;
+inline CSourceVoice g_Ding1;
+inline CSourceVoice g_Ding2;
 inline CATSPN g_pncontrol;
 inline std::unique_ptr<CDoorcontrol> g_door{ nullptr };
 inline std::unique_ptr<CAutoAnnounce> g_announce{ nullptr };
+inline std::array<int, 2> g_sta_no = { 0,0 };
+inline bool g_ShasyouBell = false;
+inline bool g_Bell1 = false;
+inline bool g_Bell2 = false;
+inline int g_belltimer = 0;
 
 
 #endif // !_ATS_PN_INCLUDED_

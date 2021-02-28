@@ -15,7 +15,7 @@ ATS_API void Dispose(void)
 {
 	if (!g_vecErrPatten.empty())
 	{
-		std::stable_sort(g_vecErrPatten.begin(), g_vecErrPatten.end(), PairLesser<DISTANCE_SET>);
+		std::stable_sort(g_vecErrPatten.begin(), g_vecErrPatten.end(), PairLesser<DISTANCE_SET>());
 		std::wofstream csv;
 		csv.open(g_module_dir / L"AtsPnErrPattern.csv");
 		if (csv.is_open())

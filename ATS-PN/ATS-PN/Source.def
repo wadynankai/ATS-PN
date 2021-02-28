@@ -1,19 +1,19 @@
 ;LIBRARY ATS-PN
 
 EXPORTS
-	Load
-	Dispose
-	GetPluginVersion
-	SetVehicleSpec
-	Initialize
-	Elapse
-	SetPower
-	SetBrake
-	SetReverser
-	KeyDown
-	KeyUp
-	HornBlow
-	DoorOpen
-	DoorClose
-	SetSignal
-	SetBeaconData
+	Load=atsLoad
+	Dispose=atsDispose
+	GetPluginVersion=atsGetPluginVersion
+	SetVehicleSpec=atsSetVehicleSpec
+	Initialize=atsInitialize
+	Elapse=atsElapse
+	SetPower=atsSetPower
+	SetBrake=atsSetBrake
+	SetReverser=atsSetReverser
+	KeyDown=atsKeyDown
+	KeyUp=atsKeyUp
+	HornBlow=atsHornBlow
+	DoorOpen=atsDoorOpen
+	DoorClose=atsDoorClose
+	SetSignal=atsSetSignal
+	SetBeaconData=atsSetBeaconData

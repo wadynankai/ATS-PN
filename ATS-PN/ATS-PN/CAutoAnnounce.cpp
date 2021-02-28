@@ -1,9 +1,10 @@
 #include "CAutoAnnounce.h"
 
-CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2) :
+CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2, int* pDelT) :
 	m_trainNo(0),//時刻表番号
 	m_staNo(0),//駅番号
 	m_Location(0.0), m_Location_pre(0.0),//距離程
+	m_pDelT(pDelT),//1フレームの時間
 	//	m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
 	m_AnnounceMode(AnnounceMode::Commuter),
 	m_first{},
@@ -13,13 +14,25 @@ CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* p
 	m_A_Loc1(std::numeric_limits<double>::max()),//出発放送の距離程を保存
 	m_A_Loc2(std::numeric_limits<double>::max()),//到着放送の距離程を保存
 	m_pXAudio2(pXau2),
+	m_Announce1{}, m_Announce2{},
+	m_pAnnounce1{ nullptr }, m_pAnnounce2{ nullptr },
+	m_thread1{}, m_thread2{},
 	m_module_dir(moduleDir),
 	m_table_dir(moduleDir / L"announce\\"),
+	m_first_time(true),
 	micGauge(0.0f)
 {}
 
 CAutoAnnounce::~CAutoAnnounce() noexcept
 {
+	if (m_thread1.joinable())
+	{
+		m_thread1.join();
+	}
+	if (m_thread2.joinable())
+	{
+		m_thread2.join();
+	}
 }
 
 void CAutoAnnounce::setTrainNo(int number)

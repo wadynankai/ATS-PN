@@ -6,6 +6,7 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+#include <thread>
 #include "..\..\common\LoadBveText.h"
 #include "..\..\common\CSourceVoice.h"
 
@@ -34,11 +35,11 @@ struct AnnounceSet//CSVファイルの行を保存
 class CAutoAnnounce
 {
 public:
-	CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr);
+	CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr, int* pDelT = nullptr);
 	~CAutoAnnounce() noexcept;
-	void setTrainNo(int);
-	inline void Running(const double,const int) noexcept;
-	inline void Halt(const int) noexcept;
+	void setTrainNo(int number);
+	inline void Running(const double& loc) noexcept;
+	inline void Halt(const int no) noexcept;
 	inline void DoorCls(void) noexcept;
 	float micGauge = 0.0f;
 
@@ -47,6 +48,7 @@ private:
 	std::filesystem::path m_table_dir;//設定ファイルのディレクトリ
 	int m_trainNo = 0;//時刻表番号
 	int m_staNo = 0;//駅番号
+	int* m_pDelT;//1フレームの時間
 	double m_Location = 0.0, m_Location_pre = 0.0;//距離程
 //	double m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
 //	double m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
@@ -55,39 +57,89 @@ private:
 	AnnounceSet m_first{};//始発駅の設定を保存
 	std::vector<AnnounceSet> m_A_Set;//始発駅以外の設定を保存
 	AnnounceMode m_AnnounceMode{ AnnounceMode::Commuter };
-	double m_A_Loc1 = std::numeric_limits<double>::max();//出発放送の距離程を保存
-	double m_A_Loc2 = std::numeric_limits<double>::max();//到着放送の距離程を保存
+	double m_A_Loc1{ std::numeric_limits<double>::max() };//出発放送の距離程を保存
+	double m_A_Loc2{ std::numeric_limits<double>::max() };//到着放送の距離程を保存
 
 	IXAudio2* m_pXAudio2 = nullptr;
-	CSourceVoice m_Announce1, m_Announce2;
-
+	CSourceVoice m_Announce1{}, m_Announce2{};
+	std::filesystem::path::value_type* m_pAnnounce1{ nullptr }, * m_pAnnounce2{ nullptr };
+	std::thread m_thread1{}, m_thread2{};
+	bool m_first_time = true;
 
 //	std::wofstream ofs;
 };
 
 
 
-inline void CAutoAnnounce::Running(const double loc, const int time) noexcept
+inline void CAutoAnnounce::Running(const double& loc) noexcept
 {
 	static int time_pre = 0;//前フレームの時刻
-	int delT = 0;//1フレームの時間
-	delT = time - time_pre;
 	m_Location = loc;//現在の位置
 //	m_RunDistance = m_Location - m_LocationOrigin;//出発してからの距離
-
-	if (m_Location_pre < m_A_Loc1 && m_Location >= m_A_Loc1)m_Announce1->Start();
-	if (m_Location_pre < m_A_Loc2 && m_Location >= m_A_Loc2)m_Announce2->Start();
-	if (delT >= 1000 || delT < 0)//駅に移動したとき
+	static bool Announce1Load = false, Announce2Load = false;
+	if (!m_first_time)
 	{
-		if (m_Announce1)m_Announce1->Stop();
-		if (m_Announce2)m_Announce2->Stop();
+		if (m_Announce1.flag && !Announce2Load)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		{
+			if (m_thread1.joinable())
+			{
+				m_thread1.join();
+			}
+			Announce1Load = true;//速い方が安全なのでスレッド代入前に行う。
+			m_thread1 = std::thread([&] {
+				m_Announce1.reset(m_pXAudio2, m_pAnnounce1, 0, XAUDIO2_VOICE_NOPITCH);
+				Announce1Load = false;
+				});//放送を登録
+			m_Announce1.flag = false;
+		}
+		if (m_Announce2.flag && !Announce1Load)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		{
+			if (m_thread2.joinable())
+			{
+				m_thread2.join();
+			}
+			Announce2Load = true;//速い方が安全なのでスレッド代入前に行う。
+			m_thread2 = std::thread([&] {
+				m_Announce2.reset(m_pXAudio2, m_pAnnounce2, 0, XAUDIO2_VOICE_NOPITCH);
+				Announce2Load = false;
+				});//放送を登録
+			m_Announce2.flag = false;
+		}
+
+		if (*m_pDelT >= 1000 || *m_pDelT <= 0)//駅に移動したとき
+		{
+			m_Announce1->Stop();
+			m_Announce2->Stop();
+		}
+		else
+		{
+			if (m_Location_pre < m_A_Loc1 && m_Location >= m_A_Loc1)
+			{
+				if (m_thread1.joinable())
+				{
+					m_thread1.join();
+				}
+				m_Announce1->Start();
+			}
+			if (m_Location_pre < m_A_Loc2 && m_Location >= m_A_Loc2)
+			{
+				if (m_thread2.joinable())
+				{
+					m_thread2.join();
+				}
+				m_Announce2->Start();
+			}
+		}
+	}
+	else
+	{
+		m_first_time = false;
 	}
 
 	micGauge = std::min(m_Announce1.getLevel() + m_Announce2.getLevel(), 1.0f);
 
 	m_Location_pre = m_Location;
 	//	m_RunDistance_pre = m_RunDistance;
-	time_pre = time;
 }
 
 
@@ -106,13 +158,9 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 		{
 			if (a.sta_no == m_staNo)
 			{
-				HRESULT hr;
-				bool mfStarted = false;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
-				hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
-				mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
 				if (!a.name1.empty())
-				{
-					m_Announce1.reset(m_pXAudio2, a.name1, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
+				{	m_Announce1.flag = true;
+					m_pAnnounce1 = const_cast<std::filesystem::path::value_type*>(a.name1.c_str());//次駅放送ファイル名を登録
 				}
 				else
 				{
@@ -120,15 +168,12 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				}
 				if (!a.name2.empty())
 				{
-					m_Announce2.reset(m_pXAudio2, a.name2, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
+					m_Announce2.flag = true;
+					m_pAnnounce2 = const_cast<std::filesystem::path::value_type*>(a.name2.c_str());//到着放送ファイル名を登録
 				}
 				else
 				{
 					m_Announce2.reset();//前の放送を消去
-				}
-				if (mfStarted)
-				{				
-					MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
 				}
 				switch (a.mode)//出発後放送の位置を登録
 				{
@@ -155,21 +200,15 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 	}
 	else//始発駅
 	{
-		HRESULT hr;
-		bool mfStarted = false;//メディアファンデーションプラットフォームを初期化したらTRUEにする。
-		hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
-		mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
 		if (!m_first.name1.empty())
 		{
-			m_Announce1.reset(m_pXAudio2, m_first.name1, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
+			m_Announce1.flag = true;
+			m_pAnnounce1 = const_cast<std::filesystem::path::value_type*>(m_first.name1.c_str());//次駅放送ファイル名を登録
 		}
 		if (!m_first.name2.empty())
 		{
-			m_Announce2.reset(m_pXAudio2, m_first.name2, 0, XAUDIO2_VOICE_NOPITCH);//放送を登録
-		}
-		if (mfStarted)
-		{
-			MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+			m_Announce2.flag = true;
+			m_pAnnounce2 = const_cast<std::filesystem::path::value_type*>(m_first.name2.c_str());//到着放送ファイル名を登録
 		}
 		switch (m_first.mode)//出発後放送の位置を登録
 		{

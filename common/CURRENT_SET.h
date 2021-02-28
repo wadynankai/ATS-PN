@@ -12,15 +12,22 @@ using CURRENT_SET = std::pair<float, float>;
 using DISTANCE_SET = std::pair<float, double>;
 
 // ¸‡‚É•À‚×‚é(<)
-template <typename T> constexpr bool PairLesser(const T& _left, const T& _right)noexcept
+template <typename T> struct PairLesser
 {
-	return _left.first < _right.first;
-}
+	_NODISCARD inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
+	{
+		return _left.first < _right.first;
+	}
+};
+
 //~‡‚É•À‚×‚é(>)
-template <typename T> constexpr bool PairGreater(const T& _left, const T& _right)noexcept
+template <typename T> struct PairGreater
 {
-	return _left.first > _right.first;
-}
+	_NODISCARD inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
+	{
+		return _left.first > _right.first;
+	}
+};
 
 
 //csv“Ç‚İ‚İ
@@ -61,7 +68,7 @@ template <typename T, typename X, typename Y> void makeTableFromCsv(
 	}
 	if (!table.empty())
 	{
-		std::stable_sort(table.begin(), table.end(), PairLesser<std::pair<X, Y>>);
+		std::stable_sort(table.begin(), table.end(), PairLesser<std::pair<X, Y>>());
 		table.shrink_to_fit();
 	}
 }
@@ -124,7 +131,7 @@ template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 	{
 		if (!a.empty())
 		{
-			std::stable_sort(a.begin(), a.end(), PairLesser<std::pair<X, Y>>);
+			std::stable_sort(a.begin(), a.end(), PairLesser<std::pair<X, Y>>());
 			a.shrink_to_fit();
 		}
 	}
@@ -162,7 +169,7 @@ template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const 
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚ÌyØ•Ğ
 template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
 {
-	return -slope(x1, y1, x2, y2) * static_cast<Y>(x1) + x2;
+	return -slope(x1, y1, x2, y2) * static_cast<Y>(x1) + y1;
 }
 
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚Ì•û’ö®(first:ŒX‚«Csecond:yØ•Ğ)

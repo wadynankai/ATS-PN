@@ -19,12 +19,14 @@
 #include <limits>
 #include <filesystem>
 #include "../..\common/CURRENT_SET.h"
+#include "..\..\common\CAtsSound.h"
+#include "..\..\common\CAtsSoundLoop.h"
 
 class CATSPN
 {
 public:
 	//パターン読み込み
-	void loadPattern(std::filesystem::path module_dir);
+	void setparam(std::filesystem::path module_dir, float* pSpeed, int* pDelT, double* pDelL, int* pBpos);
 	// 初期化
 	void initATSPN(void)noexcept;
 	//リセットボタン
@@ -45,12 +47,6 @@ public:
 	// 終端防護（非常指令）
 	void TerminalSafetyON(int)noexcept;
 	void TerminalSafety(void)noexcept;
-	//速度
-	float* TrainSpeed = nullptr;
-	//前回との時刻の差
-	int* DeltaT = nullptr;
-	//前回との位置の差
-	double* DeltaL = nullptr;
 	//非常ブレーキ指令
 	bool emgBrake = false;
 	//常用最大ブレーキ指令
@@ -68,9 +64,9 @@ public:
 	//P接近
 	bool PatternApproachDisp = false;
 	//駅通防止チャイム
-	int HaltSound = 0;
+	CAtsSound<6> HaltSound;
 	//パターン接近音声
-	int ApproachSound = ATS_SOUND_STOP;
+	CAtsSoundLoop<11> ApproachSound;
 
 private:
 	//PN制御（駅通防止）
@@ -101,10 +97,6 @@ private:
 	double m_Terminal_Dist = 0.0;
 	//線区最高速度
 	double m_Line_Max_Speed = std::numeric_limits<float>::max();
-	//駅通防止チャイム（駅に移動対策）
-//	int m_haltchime;
-	//駅通防止チャイム再生済み
-	bool m_haltchime_played = false;
 	//駅通防止パターンあり
 	bool m_halt_P = false;
 	//線区最高速度ブレーキ
@@ -115,6 +107,14 @@ private:
 	bool m_LimitSpeed_b = false;
 	//終端防護ブレーキ
 	bool m_TerminalSafety_b = false;
+	//速度
+	float* m_pTrainSpeed = nullptr;
+	//前回との時刻の差
+	int* m_pDeltaT = nullptr;
+	//前回との位置の差
+	double* m_pDeltaL = nullptr;
+	//ブレーキハンドルの位置
+	int* m_pBrake = nullptr;
 	//ブレーキパターン
 	std::vector<DISTANCE_SET> m_pattern{};
 	//現在の速度からの停止距離

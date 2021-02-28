@@ -1,8 +1,12 @@
 #include "CATSPN.h"
 
 //パターン読み込み
-void CATSPN::loadPattern(std::filesystem::path module_dir)
+void CATSPN::setparam(std::filesystem::path module_dir, float* pSpeed, int* pDelT, double* pDelL, int* pBpos)
 {
+	m_pTrainSpeed = pSpeed;
+	m_pDeltaT = pDelT;
+	m_pDeltaL = pDelL;
+	m_pBrake = pBpos;
 	makeTableFromCsv(module_dir / L"AtsPnPattern.csv", m_pattern);
 	if (!m_pattern.empty())m_pattern_Max = m_pattern.back().first;
 	makeTableFromCsv(module_dir / L"AtsPnErrPattern.csv", m_ErrPatten);
@@ -29,20 +33,10 @@ void CATSPN::resetATSPN(void)noexcept
 void CATSPN::RunPNcontrol(void)noexcept
 {
 	//パターンの計算
-	m_LineMaxSpeed_b = (*TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
+	m_LineMaxSpeed_b = (*m_pTrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
 	halt();
 	LimitSpeed();
 	TerminalSafety();
-	if (m_halt)//ピンポンの設定
-	{
-		if (!m_haltchime_played)
-		{
-			HaltSound = ATS_SOUND_PLAY;
-			m_haltchime_played = true;
-		}
-		else HaltSound = ATS_SOUND_CONTINUE;
-	}
-	else HaltSound = ATS_SOUND_STOP;
 	//ブレーキの動作
 	svcBrake = (m_halt_b || m_LimitSpeed_b || m_LineMaxSpeed_b);
 	emgBrake = m_TerminalSafety_b;
@@ -51,8 +45,8 @@ void CATSPN::RunPNcontrol(void)noexcept
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety);//PN制御
 	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App);//P接近
 	//P接近音声
-	if (PatternApproachDisp)ApproachSound = ATS_SOUND_PLAYLOOPING;
-	else ApproachSound = ATS_SOUND_STOP;
+	if (PatternApproachDisp)ApproachSound.SetVolume(1.0f);
+	else ApproachSound.SetVolume(0.0f);
 
 	if (m_halt && m_halt_App) haltDisp = 2;//駅通防止赤
 	else if (m_halt)haltDisp = 1;//駅通防止白
@@ -70,18 +64,39 @@ void CATSPN::RunPNcontrol(void)noexcept
 	static double brakeDist = 0.0;
 	if (PNcontrolDisp)
 	{
-		if (!m_pattern.empty() && *TrainSpeed <= m_pattern_Max)m_stopDist = interpolation(*TrainSpeed, m_pattern);
-		else m_stopDist = *TrainSpeed * *TrainSpeed / m_deceleration;
+		if (!m_pattern.empty() && *m_pTrainSpeed <= m_pattern_Max)
+		{
+			m_stopDist = interpolation(*m_pTrainSpeed, m_pattern);
+		}
+		else
+		{
+			m_stopDist = *m_pTrainSpeed * *m_pTrainSpeed / m_deceleration;
+		}
 
 		//パターン誤差の計算
-		if (svcBrake)brakeDist += *DeltaL;
-		else brakeDist = 0.0;
+		if (svcBrake || emgBrake || *m_pBrake > 0)
+		{
+			brakeDist += *m_pDeltaL;
+		}
+		else
+		{
+			brakeDist = 0.0;
+		}
 
-		if (!svcBrake)m_CurrentErr = interpolation(*TrainSpeed, m_ErrPatten);
+		if (!svcBrake && !emgBrake && *m_pBrake == 0)
+		{
+			m_CurrentErr = interpolation(*m_pTrainSpeed, m_ErrPatten);
+		}
 		else if (brakeDist > m_CurrentErr)
 		{
-			if (m_CurrentErr > 0)m_CurrentErr -= *DeltaL;
-			else m_CurrentErr = 0.0;
+			if (m_CurrentErr > 0)
+			{
+				m_CurrentErr -= *m_pDeltaL;
+			}
+			else
+			{
+				m_CurrentErr = 0.0;
+			}
 		}
 	}
 	else
@@ -97,10 +112,9 @@ void CATSPN::haltON(int number)noexcept
 {
 	m_halt = true;
 	m_Sta_No = number;
-	m_haltchime_played = false;
+	HaltSound.Start();
 	m_Sta_count = 0;//点滅カウンタリセット
 	m_Sta_tmr = 0;//点滅タイマーリセット
-//	m_haltchime = ATS_SOUND_STOP;
 }
 void CATSPN::stopPattern(int dist)noexcept
 {
@@ -113,13 +127,13 @@ void CATSPN::halt(void)noexcept
 	if (m_halt)
 	{
 		double pattern = m_stopDist + m_CurrentErr;//停止に必要な距離
-		double Approach = *TrainSpeed * *TrainSpeed / m_approach;
+		double Approach = *m_pTrainSpeed * *m_pTrainSpeed / m_approach;
 		if (m_halt_P)
 		{
-//			float def = *TrainSpeed / 3600.0f * *DeltaT;//1フレームで進んだ距離[m]
-			m_halt_dist -= *DeltaL;
+//			float def = *m_pTrainSpeed / 3600.0f * *m_pDeltaT;//1フレームで進んだ距離[m]
+			m_halt_dist -= *m_pDeltaL;
 			m_halt_App = (Approach >= m_halt_dist);
-			m_halt_b = (pattern >= m_halt_dist && *TrainSpeed > 15.0f);
+			m_halt_b = (pattern >= m_halt_dist && *m_pTrainSpeed > 15.0f);
 		}
 	}
 	else
@@ -131,28 +145,28 @@ void CATSPN::halt(void)noexcept
 	//駅名点滅
 	if (m_halt && m_Sta_tmr >= 0 && m_Sta_tmr <= 510 && m_Sta_count < 52)
 	{
-		if (StationName == 0 || StationName == m_Sta_No * 2 + 2) m_Sta_count += 1;
-		StationName = m_Sta_No * 2 + 1;
-		m_Sta_tmr += *DeltaT;
+		if (StationName == 0 || StationName == m_Sta_No * 4 + 2) m_Sta_count += 1;
+		StationName = m_Sta_No * 4 + 1;
+		m_Sta_tmr += *m_pDeltaT;
 	}
 	else if (m_halt && m_Sta_tmr > 510 && m_Sta_tmr < 1020 && m_Sta_count < 52)
 	{
 		if (m_Sta_count == 51)StationName = 0;
-		else if (StationName == m_Sta_No * 2 + 1)
+		else if (StationName == m_Sta_No * 4 + 1)
 		{
 			m_Sta_count += 1;
-			StationName = m_Sta_No * 2 + 2;
-			m_Sta_tmr += *DeltaT;
+			StationName = m_Sta_No * 4 + 2;
+			m_Sta_tmr += *m_pDeltaT;
 		}
 		else
 		{
-			StationName = m_Sta_No * 2 + 2;
-			m_Sta_tmr += *DeltaT;
+			StationName = m_Sta_No * 4 + 2;
+			m_Sta_tmr += *m_pDeltaT;
 		}
 	}
 	else if (m_halt && m_Sta_count < 51)
 	{
-		StationName = m_Sta_No * 2 + 2;
+		StationName = m_Sta_No * 4 + 2;
 		m_Sta_tmr %= 1020;
 	}
 	else
@@ -169,7 +183,7 @@ void CATSPN::haltOFF(void)noexcept
 	m_halt_App = false;
 	m_TerminalSafety = false;
 	m_Terminal_Dist = 0.0f;
-//	m_haltchime = ATS_SOUND_STOP;
+	HaltSound.Stop();
 }
 // 線区最高速度
 void CATSPN::LineMax(int speed)noexcept
@@ -189,10 +203,10 @@ void CATSPN::LimitSpeed()noexcept
 {
 	if (m_LimitSpeed)
 	{
-		m_LimitSpeed_dist -= *DeltaL;
+		m_LimitSpeed_dist -= *m_pDeltaL;
 		double err = std::min(m_CurrentErr, m_LimitSpeed_dist - 1);
 		double pattern = m_stopDist - m_stopDistFromLimit + err;//減速に必要な距離
-		double Approach = (*TrainSpeed * *TrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / m_approach;
+		double Approach = (*m_pTrainSpeed * *m_pTrainSpeed - m_LimitSpeed_Speed * m_LimitSpeed_Speed) / m_approach;
 		if (m_LimitSpeed_dist >= 0)//制限速度に入るまで
 		{
 			m_LimitSpeed_App = (Approach >= m_LimitSpeed_dist);
@@ -200,8 +214,8 @@ void CATSPN::LimitSpeed()noexcept
 		}
 		else//速度制限区間に入ってから
 		{
-			m_LimitSpeed_App = (*TrainSpeed > m_LimitSpeed_Speed);
-			m_LimitSpeed_b = (*TrainSpeed > m_LimitSpeed_Speed);
+			m_LimitSpeed_App = (*m_pTrainSpeed > m_LimitSpeed_Speed);
+			m_LimitSpeed_b = (*m_pTrainSpeed > m_LimitSpeed_Speed);
 		}
 	}
 }
@@ -222,9 +236,9 @@ void CATSPN::TerminalSafety(void)noexcept
 	if (m_TerminalSafety)
 	{
 		double pattern = m_stopDist + m_CurrentErr;
-		double Approach = *TrainSpeed * *TrainSpeed / m_approach;
-		m_Terminal_Dist -= *DeltaL;
+		double Approach = *m_pTrainSpeed * *m_pTrainSpeed / m_approach;
+		m_Terminal_Dist -= *m_pDeltaL;
 		m_TerminalSafety_App = (Approach >= m_Terminal_Dist);
-		m_TerminalSafety_b = ((pattern >= m_Terminal_Dist && *TrainSpeed > 5) || m_Terminal_Dist <= -0.5);
+		m_TerminalSafety_b = ((pattern >= m_Terminal_Dist && *m_pTrainSpeed > 5) || m_Terminal_Dist <= -0.5);
 	}
 }
