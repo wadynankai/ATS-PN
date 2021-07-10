@@ -1,12 +1,12 @@
 #ifndef _CAUTO_ANNOUNCE_INCLUDED_
 #define _CAUTO_ANNOUNCE_INCLUDED_
 #define NOMINMAX
+
+#include <limits>
 #include <fstream>
-#include <locale>
-#include <vector>
 #include <filesystem>
-#include <algorithm>
 #include <thread>
+
 #include "..\..\common\LoadBveText.h"
 #include "..\..\common\CSourceVoice.h"
 
@@ -35,20 +35,36 @@ struct AnnounceSet//CSVファイルの行を保存
 class CAutoAnnounce
 {
 public:
-	CAutoAnnounce(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr, int* pDelT = nullptr);
-	~CAutoAnnounce() noexcept;
+	~CAutoAnnounce()noexcept;
+	static void CreateInstance(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, int& DelT)
+	{
+		if (!instance)instance.reset(new CAutoAnnounce(moduleDir, pXau2, DelT));
+	}
+/*	static void Delete()noexcept
+	{
+		instance.reset();
+	}*/
+	static std::unique_ptr<CAutoAnnounce>& GetInstance()noexcept
+	{
+		return instance;
+	}
 	void setTrainNo(int number);
-	inline void Running(const double& loc) noexcept;
+	inline void Running(const double& loc);
 	inline void Halt(const int no) noexcept;
 	inline void DoorCls(void) noexcept;
 	float micGauge = 0.0f;
 
 private:
+	CAutoAnnounce() = delete;
+	CAutoAnnounce(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, int& DelT);
+	CAutoAnnounce& operator=(CAutoAnnounce&) = delete;
+	CAutoAnnounce& operator=(CAutoAnnounce&&) = delete;
+	inline static std::unique_ptr<CAutoAnnounce> instance;
 	std::filesystem::path m_module_dir;//プラグインのディレクトリ
 	std::filesystem::path m_table_dir;//設定ファイルのディレクトリ
 	int m_trainNo = 0;//時刻表番号
 	int m_staNo = 0;//駅番号
-	int* m_pDelT;//1フレームの時間
+	int& m_DelT;//1フレームの時間
 	double m_Location = 0.0, m_Location_pre = 0.0;//距離程
 //	double m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
 //	double m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
@@ -60,9 +76,9 @@ private:
 	double m_A_Loc1{ std::numeric_limits<double>::max() };//出発放送の距離程を保存
 	double m_A_Loc2{ std::numeric_limits<double>::max() };//到着放送の距離程を保存
 
-	IXAudio2* m_pXAudio2 = nullptr;
+	winrt::com_ptr<IXAudio2> m_pXAudio2;
 	CSourceVoice m_Announce1{}, m_Announce2{};
-	std::filesystem::path::value_type* m_pAnnounce1{ nullptr }, * m_pAnnounce2{ nullptr };
+	std::filesystem::path* m_pAnnounce1 = nullptr, * m_pAnnounce2 = nullptr;
 	std::thread m_thread1{}, m_thread2{};
 	bool m_first_time = true;
 
@@ -71,43 +87,50 @@ private:
 
 
 
-inline void CAutoAnnounce::Running(const double& loc) noexcept
+inline void CAutoAnnounce::Running(const double& loc)
 {
 	static int time_pre = 0;//前フレームの時刻
 	m_Location = loc;//現在の位置
 //	m_RunDistance = m_Location - m_LocationOrigin;//出発してからの距離
-	static bool Announce1Load = false, Announce2Load = false;
 	if (!m_first_time)
 	{
-		if (m_Announce1.flag && !Announce2Load)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce1.flag && m_pAnnounce1 && !m_thread2.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread1.joinable())
 			{
 				m_thread1.join();
 			}
-			Announce1Load = true;//速い方が安全なのでスレッド代入前に行う。
+//			Announce1Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread1 = std::thread([&] {
-				m_Announce1.reset(m_pXAudio2, m_pAnnounce1, 0, XAUDIO2_VOICE_NOPITCH);
-				Announce1Load = false;
+				m_Announce1.reset(m_pXAudio2, *m_pAnnounce1, 0, XAUDIO2_VOICE_NOPITCH);
+//				Announce1Load = false;
 				});//放送を登録
 			m_Announce1.flag = false;
 		}
-		if (m_Announce2.flag && !Announce1Load)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce2.flag && m_pAnnounce2 && !m_thread1.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread2.joinable())
 			{
 				m_thread2.join();
 			}
-			Announce2Load = true;//速い方が安全なのでスレッド代入前に行う。
+//			Announce2Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread2 = std::thread([&] {
-				m_Announce2.reset(m_pXAudio2, m_pAnnounce2, 0, XAUDIO2_VOICE_NOPITCH);
-				Announce2Load = false;
+				m_Announce2.reset(m_pXAudio2, *m_pAnnounce2, 0, XAUDIO2_VOICE_NOPITCH);
+//				Announce2Load = false;
 				});//放送を登録
 			m_Announce2.flag = false;
 		}
 
-		if (*m_pDelT >= 1000 || *m_pDelT <= 0)//駅に移動したとき
+		if (m_DelT >= 1000 || m_DelT <= 0)//駅に移動したとき
 		{
+			if (m_thread1.joinable())
+			{
+				m_thread1.join();
+			}
+			if (m_thread2.joinable())
+			{
+				m_thread2.join();
+			}
 			m_Announce1->Stop();
 			m_Announce2->Stop();
 		}
@@ -136,7 +159,7 @@ inline void CAutoAnnounce::Running(const double& loc) noexcept
 		m_first_time = false;
 	}
 
-	micGauge = std::min(m_Announce1.getLevel() + m_Announce2.getLevel(), 1.0f);
+	//micGauge = std::min(m_Announce1.getLevel() + m_Announce2.getLevel(), 1.0f);
 
 	m_Location_pre = m_Location;
 	//	m_RunDistance_pre = m_RunDistance;
@@ -160,7 +183,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 			{
 				if (!a.name1.empty())
 				{	m_Announce1.flag = true;
-					m_pAnnounce1 = const_cast<std::filesystem::path::value_type*>(a.name1.c_str());//次駅放送ファイル名を登録
+					m_pAnnounce1 = const_cast<std::filesystem::path*>(&a.name1);//次駅放送ファイル名を登録
 				}
 				else
 				{
@@ -169,7 +192,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				if (!a.name2.empty())
 				{
 					m_Announce2.flag = true;
-					m_pAnnounce2 = const_cast<std::filesystem::path::value_type*>(a.name2.c_str());//到着放送ファイル名を登録
+					m_pAnnounce2 = const_cast<std::filesystem::path*>(&a.name2);//到着放送ファイル名を登録
 				}
 				else
 				{
@@ -203,12 +226,12 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 		if (!m_first.name1.empty())
 		{
 			m_Announce1.flag = true;
-			m_pAnnounce1 = const_cast<std::filesystem::path::value_type*>(m_first.name1.c_str());//次駅放送ファイル名を登録
+			m_pAnnounce1 = &m_first.name1;//次駅放送ファイル名を登録
 		}
 		if (!m_first.name2.empty())
 		{
 			m_Announce2.flag = true;
-			m_pAnnounce2 = const_cast<std::filesystem::path::value_type*>(m_first.name2.c_str());//到着放送ファイル名を登録
+			m_pAnnounce2 = &m_first.name2;//到着放送ファイル名を登録
 		}
 		switch (m_first.mode)//出発後放送の位置を登録
 		{

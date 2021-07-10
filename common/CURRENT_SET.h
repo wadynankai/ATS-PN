@@ -1,11 +1,12 @@
 #ifndef CURRENT_SET_INCLUDED
 #define CURRENT_SET_INCLUDED
-#include <string>
-#include <iterator>
-#include <charconv>
+
+#include <algorithm>
 #include <utility>
 #include <vector>
 #include <fstream>
+#include <string>
+#include <charconv>
 #include "LoadBveText.h"
 
 using CURRENT_SET = std::pair<float, float>;
@@ -14,7 +15,7 @@ using DISTANCE_SET = std::pair<float, double>;
 // 昇順に並べる(<)
 template <typename T> struct PairLesser
 {
-	_NODISCARD inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
+	[[nodiscard]] inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
 	{
 		return _left.first < _right.first;
 	}
@@ -23,7 +24,7 @@ template <typename T> struct PairLesser
 //降順に並べる(>)
 template <typename T> struct PairGreater
 {
-	_NODISCARD inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
+	[[nodiscard]] inline constexpr bool operator ()(const T& _left, const T& _right)noexcept
 	{
 		return _left.first > _right.first;
 	}
@@ -149,37 +150,37 @@ template <typename T, typename X, typename Y, typename U> void makeTableFromCsv(
 }
 
 //2点間を通る直線の傾き
-template <typename X, typename Y> _NODISCARD inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
 }
 
 //2点間を通る直線の傾き
-template <typename X, typename Y> _NODISCARD inline constexpr Y slope(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr Y slope(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
 {
 	return (y2 - y1) / (static_cast<Y>(x2) - static_cast<Y>(x1));
 }
 
 //2点間を通る直線のy切片
-template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr Y intercept(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return -slope(p1, p2) * static_cast<Y>(p1.first) + p1.second;
 }
 
 //2点間を通る直線のy切片
-template <typename X, typename Y> _NODISCARD inline constexpr Y intercept(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr Y intercept(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
 {
 	return -slope(x1, y1, x2, y2) * static_cast<Y>(x1) + y1;
 }
 
 //2点間を通る直線の方程式(first:傾き，second:y切片)
-template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y, Y> linear(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr const std::pair<Y, Y> linear(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return { slope(p1,p2),intercept(p1,p2) };
 }
 
 //2点間を通る直線の方程式(first:傾き，second:y切片)
-template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y, Y> linear(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
+template <typename X, typename Y> [[nodiscard]] inline constexpr const std::pair<Y, Y> linear(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
 {
 	return { slope(x1, y1, x2, y2), intercept(x1, y1, x2, y2) };
 }
@@ -187,7 +188,7 @@ template <typename X, typename Y> _NODISCARD inline constexpr const std::pair<Y,
 
 
 //線形補間
-template <typename X, typename Y> _NODISCARD inline constexpr Y interpolation(
+template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation(
 	const X value,//x座標（速度）
 	const std::vector <std::pair<X, Y>>& table//テーブルとなるvector
 )noexcept

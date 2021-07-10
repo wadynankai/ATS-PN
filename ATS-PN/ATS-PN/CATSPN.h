@@ -1,6 +1,9 @@
 #ifndef _CATSPN_INCLUDED_
 #define _CATSPN_INCLUDED_
 
+#include <limits>
+#include <vector>
+#include <filesystem>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10
@@ -11,22 +14,30 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN             // Windows ヘッダーからほとんど使用されていない部分を除外する
 #endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <Windows.h>
 #include "atsplugin.h"
-#include <algorithm>
-#include <vector>
-#include <limits>
-#include <filesystem>
-#include "../..\common/CURRENT_SET.h"
+#include "..\..\common\CURRENT_SET.h"
 #include "..\..\common\CAtsSound.h"
 #include "..\..\common\CAtsSoundLoop.h"
 
 class CATSPN
 {
 public:
-	//パターン読み込み
-	void setparam(std::filesystem::path module_dir, float* pSpeed, int* pDelT, double* pDelL, int* pBpos);
+	static void CreateInstance(std::filesystem::path& module_dir, float& Speed, int& DelT, double& DelL, int& Bpos)
+	{
+		if (!pInstance)pInstance.reset(new CATSPN(module_dir, Speed, DelT, DelL, Bpos));
+	}
+/*	static void Delete()noexcept
+	{
+		pInstance.reset();
+	}*/
+	static std::unique_ptr<CATSPN>& GetInstance()noexcept
+	{
+		return pInstance;
+	}
 	// 初期化
 	void initATSPN(void)noexcept;
 	//リセットボタン
@@ -69,6 +80,14 @@ public:
 	CAtsSoundLoop<11> ApproachSound;
 
 private:
+	//パターン読み込み
+	CATSPN() = delete;
+	CATSPN(std::filesystem::path& module_dir, float& Speed, int& DelT, double& DelL, int& Bpos);
+	CATSPN(CATSPN&) = delete;
+	CATSPN(CATSPN&&) = delete;
+	CATSPN& operator=(CATSPN&) = delete;
+	CATSPN& operator=(CATSPN&&) = delete;
+	inline static std::unique_ptr<CATSPN> pInstance;
 	//PN制御（駅通防止）
 	bool m_halt = false;
 	//PN制御（速度制限）
@@ -108,15 +127,15 @@ private:
 	//終端防護ブレーキ
 	bool m_TerminalSafety_b = false;
 	//速度
-	float* m_pTrainSpeed = nullptr;
+	float& m_TrainSpeed;
 	//前回との時刻の差
-	int* m_pDeltaT = nullptr;
+	int& m_DeltaT;
 	//前回との位置の差
-	double* m_pDeltaL = nullptr;
+	double& m_DeltaL;
 	//ブレーキハンドルの位置
-	int* m_pBrake = nullptr;
+	int& m_Brake;
 	//ブレーキパターン
-	std::vector<DISTANCE_SET> m_pattern{};
+	std::vector<DISTANCE_SET> m_pattern;
 	//現在の速度からの停止距離
 	double m_stopDist = 0.0;
 	//制限速度からの停止距離
@@ -124,7 +143,7 @@ private:
 	//ブレーキパターンの最大速度
 	float m_pattern_Max = std::numeric_limits<float>::max();
 	//ブレーキパターンの誤差
-	std::vector<DISTANCE_SET> m_ErrPatten{};
+	std::vector<DISTANCE_SET> m_ErrPatten;
 	//現在の誤差
 	double m_CurrentErr = 0.0;
 

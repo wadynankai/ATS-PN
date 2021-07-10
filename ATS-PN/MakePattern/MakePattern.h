@@ -1,7 +1,7 @@
 ﻿#ifndef _MAKEPATTERN_H_INCLUDED_
 #define _MAKEPATTERN_H_INCLUDED_
-
-
+#include <deque>
+#include <filesystem>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10
@@ -14,10 +14,6 @@
 #endif
 #define NOMINMAX
 #include <Windows.h>
-#include <fstream>
-#include <filesystem>
-#include <limits>
-#include <deque>
 #include "..\..\common\CURRENT_SET.h"
 
 #include "atsplugin.h"

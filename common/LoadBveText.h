@@ -1,10 +1,9 @@
-#pragma once
 #ifndef LOAD_BVE_TEXT_INCLUDED
 #define LOAD_BVE_TEXT_INCLUDED
-#include <vector>
-#include <locale>
-#include <string>
-#include <algorithm>
+
+#include<string>
+#include<cctype>
+#include<locale>
 
 //「;」もしくは「#」から始まるコメントを削除する。
 template <typename T>void cleanUpBveStr(std::basic_string<T>& StrIn, const std::locale& _loc = std::locale())

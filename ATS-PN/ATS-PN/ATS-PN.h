@@ -1,6 +1,7 @@
 #ifndef _ATS_PN_INCLUDED_
 #define _ATS_PN_INCLUDED_
 
+#include <filesystem>
 
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
@@ -12,17 +13,15 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN             // Windows ヘッダーからほとんど使用されていない部分を除外する
 #endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <Windows.h>
 #include <mfapi.h>
-#include <fstream>
-#include <filesystem>
-#include <memory>
-#include <array>
-#include <vector>
-
 #include "atsplugin.h"
+#include "..\..\common\LoadBveText.h"
 #include "CATSPN.h"
+#include "..\..\common\CSourceVoice.h"
 #include "CDoorcontrol.h"
 #include "CAutoAnnounce.h"
 #include "CTraponBackGround.h"
@@ -37,8 +36,6 @@ namespace PN_Beacon
 	inline constexpr int Halt = 105;//駅通防止チャイム
 	inline constexpr int LineLim = 130;//線区最高速度
 };
-
-inline HMODULE g_hModule;
 inline int g_svcBrake;//常用最大
 inline int g_emgBrake;//非常ブレーキ
 inline int g_Power;//力行ノッチ
@@ -55,9 +52,8 @@ inline int g_AstTimer;//アスタリスク点滅タイマー
 inline bool g_Aster;//アスタリスク
 inline int g_timetable = 0;//時刻表
 inline bool g_delete_push = false;//Deleteが押されている間True
-inline bool g_ICcard_insert = false;//ICカード挿入状態
-
-inline CTraponBackGround g_TraponBackGround;//トラポン背景の出力
+inline bool g_PgUp_push = false;//Deleteが押されている間True
+inline bool g_PgDn_push = false;//Deleteが押されている間True
 
 inline winrt::com_ptr<IXAudio2> pXAudio2;
 inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
@@ -66,11 +62,8 @@ inline CSourceVoice g_Ding;
 inline bool g_Space = false;
 inline CSourceVoice g_Ding1;
 inline CSourceVoice g_Ding2;
-inline CATSPN g_pncontrol;
-inline std::unique_ptr<CDoorcontrol> g_door{ nullptr };
-inline std::unique_ptr<CAutoAnnounce> g_announce{ nullptr };
-inline std::array<int, 2> g_sta_no = { 0,0 };
-inline bool g_ShasyouBell = false;
+//inline std::array<int, 2> g_sta_no = { 0,0 };
+inline bool g_ShasyouBell = false;//車掌ベル機能有効
 inline bool g_Bell1 = false;
 inline bool g_Bell2 = false;
 inline int g_belltimer = 0;

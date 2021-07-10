@@ -28,10 +28,10 @@ inline void CDoorcontrol::loadconfig(void)
 	Config.close();
 	if (m_pXAudio2)
 	{
-		m_DoorClsL = { m_pXAudio2, DoorClsL_name, 0, XAUDIO2_VOICE_NOPITCH };
-		m_DoorClsR = { m_pXAudio2, DoorClsR_name, 0, XAUDIO2_VOICE_NOPITCH };
-		m_DoorOpnL = { m_pXAudio2, DoorOpnL_name, 0, XAUDIO2_VOICE_NOPITCH };
-		m_DoorOpnR = { m_pXAudio2, DoorOpnR_name, 0, XAUDIO2_VOICE_NOPITCH };
+		m_DoorClsL.reset(m_pXAudio2, DoorClsL_name, 0, XAUDIO2_VOICE_NOPITCH);
+		m_DoorClsR.reset(m_pXAudio2, DoorClsR_name, 0, XAUDIO2_VOICE_NOPITCH);
+		m_DoorOpnL.reset(m_pXAudio2, DoorOpnL_name, 0, XAUDIO2_VOICE_NOPITCH);
+		m_DoorOpnR.reset(m_pXAudio2, DoorOpnR_name, 0, XAUDIO2_VOICE_NOPITCH);
 	}
 	if (m_DoorClsL)m_DoorClsL->SetVolume(1.0f);
 	if (m_DoorClsR)m_DoorClsR->SetVolume(1.0f);
@@ -39,7 +39,7 @@ inline void CDoorcontrol::loadconfig(void)
 	if (m_DoorOpnR)m_DoorOpnR->SetVolume(1.0f);
 }
 
-CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, IXAudio2* pXau2) :
+CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2) :
 	m_pXAudio2(pXau2),
 	m_module_dir(moduleDir),
 	m_tableFileName(m_module_dir / L"doorConfig.csv"),
@@ -50,10 +50,6 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, IXAudio2* pXa
 	m_sanoF(false), m_sanoTrack(0)
 {
 	loadconfig();
-}
-
-CDoorcontrol::~CDoorcontrol() noexcept
-{
 }
 
 void CDoorcontrol::setTrainNo(const int no)

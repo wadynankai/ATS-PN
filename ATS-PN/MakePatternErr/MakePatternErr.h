@@ -1,7 +1,8 @@
 ﻿#ifndef _MAKEPATTERNERR_H_INCLUDED_
 #define _MAKEPATTERNERR_H_INCLUDED_
 
-
+#include <filesystem>
+#include <vector>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10

@@ -1,10 +1,8 @@
 #ifndef _CDOOR_CONTROL_INCLUDED
 #define _CDOOR_CONTROL_INCLUDED
-#define NOMINMAX
-#include <vector>
+
 #include <filesystem>
 #include <fstream>
-#include <algorithm>
 #include "..\..\common\CSourceVoice.h"
 #include "..\..\common\LoadBveText.h"
 
@@ -19,8 +17,18 @@ namespace DoorTimer
 class CDoorcontrol
 {
 public:
-	CDoorcontrol(const std::filesystem::path& moduleDir, IXAudio2* pXau2 = nullptr);
-	~CDoorcontrol() noexcept;
+	static void CreateInstance(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2 = nullptr)
+	{
+		if (!instance)instance.reset(new CDoorcontrol(moduleDir, pXau2));
+	}
+/*	static void Delete()noexcept
+	{
+		instance.reset();
+	}*/
+	static std::unique_ptr<CDoorcontrol>& GetInstance()noexcept
+	{
+		return instance;
+	}
 	void setTrainNo(const int);
 	inline void Running(const int)noexcept;
 	inline void Halt(const int)noexcept;
@@ -31,6 +39,11 @@ public:
 	int doorUmi = 0;//ドア海インジケータ―(0:透明,1:消灯,2:点灯)
 
 private:
+	CDoorcontrol() = delete;
+	CDoorcontrol(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2 = nullptr);
+	CDoorcontrol& operator=(CDoorcontrol&) = delete;
+	CDoorcontrol& operator=(CDoorcontrol&&) = delete;
+	inline static std::unique_ptr<CDoorcontrol> instance;
 	void loadconfig(void);
 	bool m_pilotLampL = true, m_pilotLampR = true;
 	std::filesystem::path m_module_dir;
@@ -41,7 +54,7 @@ private:
 	int m_OpenTime = 0, m_OpenTime_pre = 0;//ドアが開いてからの時間
 	int m_sanoTrack = 0, m_nambaTrack = 0;//泉佐野と難波の番線
 
-	IXAudio2* m_pXAudio2 = nullptr;
+	winrt::com_ptr<IXAudio2> m_pXAudio2;
 	CSourceVoice m_DoorClsL, m_DoorClsR, m_DoorOpnL, m_DoorOpnR;
 
 };

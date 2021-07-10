@@ -4,34 +4,34 @@
 // Called when this plug-in is loaded
 ATS_API void WINAPI atsLoad(void)
 {
-	try
-	{
-		g_pncontrol.setparam(g_module_dir, &g_TrainSpeed, &g_deltaT, &g_deltaL, &g_Brake);
-	}
+//	try
+//	{
+		if(!CATSPN::GetInstance())CATSPN::CreateInstance(g_module_dir, g_TrainSpeed, g_deltaT, g_deltaL, g_Brake);
+/*	}
 	catch (const std::exception& exp)
 	{
 		std::string str("PNパターン読み込み時に例外発生\r\n");
 		str += exp.what();
 		MessageBoxA(nullptr, str.c_str(), "ATS-PN.dll", MB_OK);
 		std::exit(EXIT_FAILURE);
-	}
+	}*/
 	HRESULT hr;
 	if (FAILED(hr = XAudio2Create(pXAudio2.put(), 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化失敗
 	{
-		pXAudio2 = nullptr;
+		pXAudio2 = {};
 	}
 	else
 	{
 		if (FAILED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, NULL, NULL, AudioCategory_GameEffects)))
 		{
 			if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;//MasteringVoiceを消す
-			pXAudio2 = nullptr;//XAudio2をやめる
+			pXAudio2 = {};//XAudio2をやめる
 		}
 		else
 		{
-			g_Ding.reset(pXAudio2.get(), g_module_dir / L"atsDing.wav", XAUDIO2_LOOP_INFINITE, XAUDIO2_VOICE_NOPITCH);
-			g_Ding1.reset(pXAudio2.get(), g_module_dir / L"atsDing1.wav", 0, XAUDIO2_VOICE_NOPITCH);
-			g_Ding2.reset(pXAudio2.get(), g_module_dir / L"atsDing2.wav", 0, XAUDIO2_VOICE_NOPITCH);
+			g_Ding.reset(pXAudio2, g_module_dir / L"atsDing.wav", XAUDIO2_LOOP_INFINITE, XAUDIO2_VOICE_NOPITCH);
+			g_Ding1.reset(pXAudio2, g_module_dir / L"atsDing1.wav", 0, XAUDIO2_VOICE_NOPITCH);
+			g_Ding2.reset(pXAudio2, g_module_dir / L"atsDing2.wav", 0, XAUDIO2_VOICE_NOPITCH);
 			WAVEFORMATEX wfx = { 0 };
 			g_Ding.getFormat(&wfx);
 			UINT32 LoopEnd = wfx.nSamplesPerSec * 42 / 1000;
@@ -42,49 +42,35 @@ ATS_API void WINAPI atsLoad(void)
 			g_Ding2->SetVolume(1.0);
 		}
 	}
-	try
+	std::filesystem::path TraponConfig(g_module_dir / "TraponConfig.txt");
+	if (std::filesystem::exists(TraponConfig))
 	{
-		std::filesystem::path TraponConfig(g_module_dir / "TraponConfig.txt");
-		if (std::filesystem::exists(TraponConfig))
+		std::ifstream Config;
+		Config.open(TraponConfig);
+		if (Config.is_open())
 		{
-			std::ifstream Config;
-			Config.open(TraponConfig);
-			if (Config.is_open())
-			{
-				Config.imbue(std::locale("ja-JP"));
-				std::string loadline;
-				std::getline(Config, loadline);
-				cleanUpBveStr(loadline, Config.getloc());
-				g_TraponBackGround.setTransitionCount(std::stoi(loadline));
-			}
-			Config.close();
+			Config.imbue(std::locale("ja-JP"));
+			std::string loadline;
+			std::getline(Config, loadline);
+			cleanUpBveStr(loadline, Config.getloc());
+			CTrapon::GetInstance().setTransitionCount(std::stoi(loadline));
 		}
-		else
-		{
-			MessageBoxA(nullptr, (TraponConfig.string() + "が見つかりません").c_str(), "ATS-PN.dll", MB_OK);
-		}
+		Config.close();
 	}
-	catch (const std::exception& exp)
+	else
 	{
-		std::string str("トラポン設定読み込み時にエラー発生\r\n");
-		str += exp.what();
-		MessageBoxA(nullptr, str.c_str(), "ATS-PN.dll", MB_OK);
-		std::exit(EXIT_FAILURE);
+		MessageBoxA(nullptr, (TraponConfig.string() + "が見つかりません").c_str(), "ATS-PN.dll", MB_OK);
 	}
 	g_Space = false;
 	g_delete_push = false;
-	g_ICcard_insert = false;
+	g_PgUp_push = false;
+	g_PgDn_push = false;
 }
 
 // Called when this plug-in is unloaded
 ATS_API void WINAPI atsDispose(void)
 {
-	g_door.reset();//これがないと終了時エラーになる。
-	g_announce.reset();//これがないと終了時エラーになる。
-	g_Ding.reset();
-	g_Ding1.reset();
-	g_Ding2.reset();
-	if (pMasteringVoice)pMasteringVoice->DestroyVoice(), pMasteringVoice = nullptr;
+	pXAudio2 = {};//dllの場合，デストラクタに解放処理を任せられない？
 }
 
 // Returns the version numbers of ATS plug-in
@@ -103,7 +89,7 @@ ATS_API void WINAPI atsSetVehicleSpec(ATS_VEHICLESPEC vehicleSpec)
 // Called when the game is started
 ATS_API void WINAPI atsInitialize(int brake)
 {
-	g_pncontrol.initATSPN();
+	if(CATSPN::GetInstance())CATSPN::GetInstance()->initATSPN();
 }
 
 // Called every frame
@@ -120,7 +106,7 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 	g_location = vehicleState.Location;
 	g_TrainSpeed = vehicleState.Speed;
 
-	g_pncontrol.RunPNcontrol();//PN制御実行
+	if (CATSPN::GetInstance())CATSPN::GetInstance()->RunPNcontrol();//PN制御実行
 	g_AstTimer += g_deltaT;
 	if (g_AstTimer >= 1000)
 	{
@@ -130,11 +116,11 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 	else if (g_AstTimer < 0)g_AstTimer = 0;
 
 
-	panel[99] = g_TraponBackGround(g_deltaT);//トラポン背景出力
+	panel[99] = CTrapon::GetInstance().getBackGround(g_deltaT);//トラポン背景出力
+	panel[100] = CTrapon::GetInstance().getTimeTable();//時刻表
 
-	if (!g_TraponBackGround.getPower())//トラポンの電源が切れているとき
+	if (!CTrapon::GetInstance().getPower())//トラポンの電源が切れているとき
 	{
-		panel[100] = 0;
 		//表示
 		panel[2] = 0;//GPS
 		panel[3] = 0;//P接近
@@ -146,78 +132,65 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 		panel[233] = 0;//終端防護
 		panel[255] = 0;//アスタリスク
 	}
-	else [[likely]]
+	else [[likely]]//トラポンの電源が入っているとき
 	{
-		if (!g_ICcard_insert || g_timetable == 0)//ICカードが差さっていないとき
-		{
-			if (!g_TraponBackGround.getColor())
-			{
-				panel[100] = 1;
-			}
-			else
-			{
-				panel[100] = 2;
-			}
-		}
-		else [[likely]]//ICカードが差さっているとき
-		{ 
-			if (!g_TraponBackGround.getColor())
-			{
-				panel[100] = 2 * g_timetable + 1;
-			}
-			else
-			{
-				panel[100] = 2 * g_timetable + 2;
-			}
-		}
 		//表示
 		panel[2] = true;//GPS
-		panel[3] = g_pncontrol.PatternApproachDisp;//P接近
-		panel[5] = (g_pncontrol.svcBrake || g_pncontrol.emgBrake);//ブレーキ動作
-		panel[6] = g_pncontrol.PNcontrolDisp;//PN制御
-		panel[193] = g_pncontrol.SpeedLimitDisp;//速度制限
-		if (g_pncontrol.StationName == 0)//駅名点滅していないとき
+		if (CATSPN::GetInstance())
 		{
-			panel[199] = 0;
-		}
-		else 
-		{
-			if (!g_TraponBackGround.getColor())
+			panel[3] = CATSPN::GetInstance()->PatternApproachDisp;//P接近
+			panel[5] = (CATSPN::GetInstance()->svcBrake || CATSPN::GetInstance()->emgBrake);//ブレーキ動作
+			panel[6] = CATSPN::GetInstance()->PNcontrolDisp;//PN制御
+			panel[193] = CATSPN::GetInstance()->SpeedLimitDisp;//速度制限
+			if (CATSPN::GetInstance()->StationName == 0)//駅名点滅していないとき
 			{
-				panel[199] = g_pncontrol.StationName;//駅名点滅（黒画面）
+				panel[199] = 0;
 			}
 			else
 			{
-				panel[199] = g_pncontrol.StationName + 2;//駅名点滅（白画面）
+				if (!CTrapon::GetInstance().getColor())
+				{
+					panel[199] = CATSPN::GetInstance()->StationName;//駅名点滅（黒画面）
+				}
+				else
+				{
+					panel[199] = CATSPN::GetInstance()->StationName + 2;//駅名点滅（白画面）
+				}
 			}
+			panel[208] = CATSPN::GetInstance()->haltDisp;//駅通防止
+			panel[233] = CATSPN::GetInstance()->TerminalSafetyDisp;//終端防護
 		}
-		panel[208] = g_pncontrol.haltDisp;//駅通防止
-		panel[233] = g_pncontrol.TerminalSafetyDisp;//終端防護
 		panel[255] = g_Aster;//アスタリスク
 	}
 
 
 
 	//音
-	sound[g_pncontrol.HaltSound] = g_pncontrol.HaltSound();//駅通防止チャイム
-	sound[g_pncontrol.ApproachSound] = g_pncontrol.ApproachSound();//「接近，接近」
-	if (g_door)
+	if (CATSPN::GetInstance())
 	{
-		g_door->Running(vehicleState.Time);
-		panel[217] = g_door->doorYama;
-		panel[218] = g_door->doorUmi;
+		sound[CATSPN::GetInstance()->HaltSound] = CATSPN::GetInstance()->HaltSound();//駅通防止チャイム
+		sound[CATSPN::GetInstance()->ApproachSound] = CATSPN::GetInstance()->ApproachSound();//「接近，接近」
 	}
-	if (g_announce)
+	if (CDoorcontrol::GetInstance())
 	{
-		g_announce->Running(vehicleState.Location);
-		panel[213] = static_cast<int>(g_announce->micGauge * 10.0f);
+		CDoorcontrol::GetInstance()->Running(vehicleState.Time);
+		panel[217] = CDoorcontrol::GetInstance()->doorYama;
+		panel[218] = CDoorcontrol::GetInstance()->doorUmi;
+	}
+	if (CAutoAnnounce::GetInstance())
+	{
+		CAutoAnnounce::GetInstance()->Running(vehicleState.Location);
+		panel[213] = static_cast<int>(CAutoAnnounce::GetInstance()->micGauge * 10.0f);
 	}
 
 	ret.Reverser = g_Reverser;
 	ret.Power = g_Power;
 	ret.Brake = g_Brake;//正常時
-	if (g_pncontrol.emgBrake)ret.Brake = g_emgBrake;//非常指令
-	else if (g_pncontrol.svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
+	if (CATSPN::GetInstance())
+	{
+		if (CATSPN::GetInstance()->emgBrake)ret.Brake = g_emgBrake;//非常指令
+		else if (CATSPN::GetInstance()->svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
+	}
 	ret.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
 
 	if (g_ShasyouBell)
@@ -288,15 +261,37 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 		{
 			if (GetKeyState(VK_SHIFT) & 0x80)
 			{
-				g_ICcard_insert = !g_ICcard_insert;
+				CTrapon::GetInstance().IcCard();
 			}
 			else [[likely]]
 			{
-				g_TraponBackGround.changeColor();
+				CTrapon::GetInstance().changeColor();
 			}
 			g_delete_push = true;
 		}
+		break;
+	case ATS_KEY_C1:
+		if (!g_PgUp_push) 
+		{
+			if (GetKeyState(VK_SHIFT) & 0x80)
+			{
+				CTrapon::GetInstance().nextTimeTable();
+			}
+			g_PgUp_push = true;
+		}
+		break;
+	case ATS_KEY_C2:
+		if (!g_PgDn_push)
+		{
+			if (GetKeyState(VK_SHIFT) & 0x80)
+			{
+				CTrapon::GetInstance().prevTimeTable();
+			}
+			g_PgDn_push = true;
+		}
+		break;
 	}
+
 }
 
 // Called when any ATS key is released
@@ -328,22 +323,30 @@ ATS_API void WINAPI atsKeyUp(int atsKeyCode)
 		}
 		break;
 	case ATS_KEY_B1:
-		g_pncontrol.resetATSPN();
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->resetATSPN();
 		break;
 	case ATS_KEY_A1:
 		if (GetKeyState(VK_SHIFT) & 0x80)
 		{
-			g_TraponBackGround.powerButton();
+			CTrapon::GetInstance().powerButton();
 		}
 		else [[likely]]
 		{
-			if (g_door)g_door->NambaDoorOpn();
+			if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorOpn();
 		}
 		break;
 	case ATS_KEY_A2:
 		if (g_delete_push)g_delete_push = false;
 		break;
+	case ATS_KEY_C1:
+		if (g_PgUp_push)g_PgUp_push = false;
+		break;
+	case ATS_KEY_C2:
+		if (g_PgDn_push)g_PgDn_push = false;
+		break;
 	}
+
+
 }
 
 // Called when the horn is used
@@ -355,10 +358,10 @@ ATS_API void WINAPI atsHornBlow(int hornType)
 // Called when the door is opened
 ATS_API void WINAPI atsDoorOpen(void)
 {
-	g_pncontrol.haltOFF();
-	if (g_door)
+	if (CATSPN::GetInstance())CATSPN::GetInstance()->haltOFF();
+	if (CDoorcontrol::GetInstance())
 	{
-		g_door->DoorOpn();
+		CDoorcontrol::GetInstance()->DoorOpn();
 	}
 	g_ShasyouBell = false;
 	g_Bell1 = false;
@@ -368,16 +371,16 @@ ATS_API void WINAPI atsDoorOpen(void)
 // Called when the door is closed
 ATS_API void WINAPI atsDoorClose(void)
 {
-	g_pncontrol.haltOFF();
-	if (g_door)
+	if (CATSPN::GetInstance())CATSPN::GetInstance()->haltOFF();
+	if (CDoorcontrol::GetInstance())
 	{
-		g_door->DoorCls();
+		CDoorcontrol::GetInstance()->DoorCls();
 	}
-	if (g_announce)
+	if (CAutoAnnounce::GetInstance())
 	{
-		g_announce->DoorCls();
+		CAutoAnnounce::GetInstance()->DoorCls();
 	}
-	if ((g_sta_no.at(0) == 2 && g_sta_no.at(1) == 3)
+/*	if ((g_sta_no.at(0) == 2 && g_sta_no.at(1) == 3)
 		|| (g_sta_no.at(0) == 3 && g_sta_no.at(1) == 5)
 		|| (g_sta_no.at(0) == 31 && g_sta_no.at(1) == 30)
 		|| (g_sta_no.at(0) == 44 && g_sta_no.at(1) == 43)
@@ -387,7 +390,7 @@ ATS_API void WINAPI atsDoorClose(void)
 		|| (g_sta_no.at(0) == 105 && g_sta_no.at(1) == 104))
 	{
 		g_ShasyouBell = true;
-	}
+	}*/
 }
 
 // Called when current signal is changed
@@ -402,20 +405,20 @@ ATS_API void WINAPI atsSetBeaconData(ATS_BEACONDATA beaconData)
 	switch (beaconData.Type)
 	{
 	case PN_Beacon::SpdLim:
-		g_pncontrol.LimitSpeedON(beaconData.Optional);
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->LimitSpeedON(beaconData.Optional);
 		break;
 	case PN_Beacon::StopPatern:
-		g_pncontrol.stopPattern(beaconData.Optional);
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->stopPattern(beaconData.Optional);
 		break;
 	case PN_Beacon::Defeat:
-		g_pncontrol.LimitSpeedOFF();
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->LimitSpeedOFF();
 		break;
 	case PN_Beacon::Terminal:
-		g_pncontrol.TerminalSafetyON(beaconData.Optional);
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->TerminalSafetyON(beaconData.Optional);
 		break;
 	case PN_Beacon::Halt:
-		g_sta_no.at(1) = g_sta_no.at(0);
-		g_sta_no.at(0) = beaconData.Optional;
+//		g_sta_no.at(1) = g_sta_no.at(0);
+//		g_sta_no.at(0) = beaconData.Optional;
 		if (beaconData.Optional != 1
 			&& beaconData.Optional != 32
 			&& beaconData.Optional != 45
@@ -424,72 +427,50 @@ ATS_API void WINAPI atsSetBeaconData(ATS_BEACONDATA beaconData)
 			&& beaconData.Optional != 86
 			&& beaconData.Optional != 106)
 		{
-			g_pncontrol.haltON(beaconData.Optional);
+			if (CATSPN::GetInstance())CATSPN::GetInstance()->haltON(beaconData.Optional);
 		}
-		if (g_door)
+		else g_ShasyouBell = true;
+		if (CDoorcontrol::GetInstance())
 		{
-			g_door->Halt(beaconData.Optional);
+			CDoorcontrol::GetInstance()->Halt(beaconData.Optional);
 		}
-		if (g_announce)
+		if (CAutoAnnounce::GetInstance())
 		{
-			g_announce->Halt(beaconData.Optional);
+			CAutoAnnounce::GetInstance()->Halt(beaconData.Optional);
 		}
 		break;
 	case PN_Beacon::LineLim:
-		g_pncontrol.LineMax(beaconData.Optional);
+		if (CATSPN::GetInstance())CATSPN::GetInstance()->LineMax(beaconData.Optional);
 		break;
 	case PN_Beacon::Timetable:
 		g_timetable = beaconData.Optional % 1000;
-		if (g_timetable > 0)
+		CTrapon::GetInstance().addTrainNo(g_timetable);
+		CTrapon::GetInstance().wakeUp();
+		if (CDoorcontrol::GetInstance())
 		{
-			g_TraponBackGround.wakeUp();
-			g_ICcard_insert = true;
-		}
-		if (g_door)
-		{
-			g_door->setTrainNo(g_timetable);
+			CDoorcontrol::GetInstance()->setTrainNo(g_timetable);
 		}
 		else
 		{
-			try
+			CDoorcontrol::CreateInstance(g_module_dir, pXAudio2);
+			if (CDoorcontrol::GetInstance())
 			{
-				g_door = std::make_unique<CDoorcontrol>(g_module_dir, pXAudio2.get());
-				if (g_door)
-				{
-					g_door->setTrainNo(g_timetable);
-				}
-			}
-			catch (const std::exception& exp)
-			{
-				std::string str("ドア機能読み込み時に例外発生\r\n");
-				str += exp.what();
-				MessageBoxA(nullptr, str.c_str(), "ATS-PN.dll", MB_OK);
-				std::exit(EXIT_FAILURE);
+				CDoorcontrol::GetInstance()->setTrainNo(g_timetable);
 			}
 		}
 		if (beaconData.Optional >= 1000)
 		{
-			try
+			if (CAutoAnnounce::GetInstance())
 			{
-				if (g_announce)
-				{
-					g_announce->setTrainNo(beaconData.Optional);
-				}
-				else
-				{
-					g_announce = std::make_unique<CAutoAnnounce>(g_module_dir, pXAudio2.get(), &g_deltaT);
-					if (g_announce)
-					{
-						g_announce->setTrainNo(beaconData.Optional);
-					}
-				}
+				CAutoAnnounce::GetInstance()->setTrainNo(beaconData.Optional);
 			}
-			catch (const std::exception& exp)
+			else
 			{
-				std::string str("自動放送読み込み時に例外発生\r\n");
-				str += exp.what();
-				MessageBoxA(nullptr, str.c_str(), "ATS-PN.dll", MB_OK);
-				std::exit(EXIT_FAILURE);
+				CAutoAnnounce::CreateInstance(g_module_dir, pXAudio2, g_deltaT);
+				if (CAutoAnnounce::GetInstance())
+				{
+					CAutoAnnounce::GetInstance()->setTrainNo(beaconData.Optional);
+				}
 			}
 		}
 		break;
