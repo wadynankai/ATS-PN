@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,2
- PRODUCTVERSION 1,1,0,2
+ FILEVERSION 1,2,0,0
+ PRODUCTVERSION 1,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WADYNANKAI"
             VALUE "FileDescription", "このプラグインを車両データで読み込みます。車両を直線が続く平坦線で読み込みます。時刻と位置ウィンドウで130km/h程度の速度を出します。保安装置[B1](Home)キーでデータ取得をします。BVEもしくはシナリオ終了でcsvファイルを出力します。"
-            VALUE "FileVersion", "1.1.0.2"
+            VALUE "FileVersion", "1.2.0.0"
             VALUE "InternalName", "MakePattern.dll"
             VALUE "LegalCopyright", "Copyright (C) WADYNANKAI2020"
             VALUE "OriginalFilename", "MakePattrn.dll"
             VALUE "ProductName", "ATS-PNパターン作成プラグイン"
-            VALUE "ProductVersion", "1.1.0.2"
+            VALUE "ProductVersion", "1.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

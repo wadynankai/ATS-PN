@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,0
- PRODUCTVERSION 1,1,0,0
+ FILEVERSION 1,2,0,0
+ PRODUCTVERSION 1,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WADYNANKAI"
             VALUE "FileDescription", "平坦線でB1(Home)を押すと常用最大ブレーキがかかります。パターンと比較し，停止距離の誤差を記録します。"
-            VALUE "FileVersion", "1.1.0.0"
+            VALUE "FileVersion", "1.2.0.0"
             VALUE "InternalName", "MakePatternErr.dll"
             VALUE "LegalCopyright", "Copyright (C) WADYNANKAI2020"
             VALUE "OriginalFilename", "MakePattrnErr.dll"
             VALUE "ProductName", "ATS-PN誤差パターン作成プラグイン"
-            VALUE "ProductVersion", "1.1.0.0"
+            VALUE "ProductVersion", "1.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

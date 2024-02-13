@@ -19,10 +19,11 @@ ATS_API void Dispose(void)
 		csv.open(g_module_dir / L"AtsPnPattern.csv");
 		if (csv.is_open())
 		{
-			csv << "ATS-PN用ブレーキパターンファイル" << std::endl;
+			csv.imbue(std::locale(".UTF-8"));
+			csv << L"ATS-PN用ブレーキパターンファイル" << std::endl;
 			for (const auto& a : g_deqTable)
 			{
-				csv << std::setprecision(std::numeric_limits<DISTANCE_SET::first_type>::max_digits10) << a.first << ","
+				csv << std::setprecision(std::numeric_limits<DISTANCE_SET::first_type>::max_digits10) << a.first << L","
 					<< std::setprecision(std::numeric_limits<DISTANCE_SET::second_type>::max_digits10) << (stopLoc - a.second) << std::endl;
 			}
 			csv.close();

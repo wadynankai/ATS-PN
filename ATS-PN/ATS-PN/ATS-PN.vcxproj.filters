@@ -21,16 +21,19 @@
     <ClInclude Include="ATS-PN.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="CATSPN.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="CAutoAnnounce.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="CDoorcontrol.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="CAutoAnnounce.h">
+    <ClInclude Include="CTraponBackGround.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\LoadBveText.h">
@@ -39,10 +42,13 @@
     <ClInclude Include="..\..\common\CURRENT_SET.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\CSourceVoice.h">
+    <ClInclude Include="..\..\common\CAtsSound.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="CTraponBackGround.h">
+    <ClInclude Include="..\..\common\CAtsSoundLoop.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\CAudioFileInputNode.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,16 +56,16 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CATSPN.cpp">
+    <ClCompile Include="ATS-PN.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CDoorcontrol.cpp">
+    <ClCompile Include="CATSPN.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="CAutoAnnounce.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ATS-PN.cpp">
+    <ClCompile Include="CDoorcontrol.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,26 +1,39 @@
 #ifndef CATS_SOUND_LOOP_INCLUDED
 #define CATS_SOUND_LOOP_INCLUDED
 #include "CURRENT_SET.h"
+
 template <size_t index = static_cast<size_t>(-1)>class CAtsSoundLoop
 {
 public:
-	_NODISCARD const int operator()()const noexcept
+	void operator()(int* __p_sound) noexcept
 	{
-		if (m_play)
+		static_assert(std::cmp_less(index, 256), "Index must be 0-255.");
+		if constexpr (std::cmp_less(index,256))
 		{
-			return m_vol;
+			if (FirstTime)
+			{
+				__p_sound[index] = ats_sound_stop;
+				FirstTime = false;
+			}
+			else[[likely]]
+			{
+				if (m_play)
+				{
+					__p_sound[index] = m_vol;
+				}
+				else __p_sound[index] = ats_sound_stop;
+			}
 		}
-		else return ats_sound_stop;
 	}
-	_NODISCARD const bool isRunning()const noexcept
+	_NODISCARD constexpr const bool isRunning()const noexcept
 	{
 		return m_play;
 	}
-	void Start()noexcept
+	constexpr void Start()noexcept
 	{
 		m_play = true;
 	}
-	void Stop()noexcept
+	constexpr void Stop()noexcept
 	{
 		m_play = false;
 	}
@@ -33,12 +46,12 @@ public:
 	}
 	_NODISCARD constexpr size_t getIndex()const noexcept
 	{
-		static_assert(index < 256, "Index must be 0-255.");
+		static_assert(std::cmp_less(index, 256), "Index must be 0-255.");
 		return index;
 	}
 	_NODISCARD constexpr operator size_t()const noexcept
 	{
-		static_assert(index < 256, "Index must be 0-255.");
+		static_assert(std::cmp_less(index, 256), "Index must be 0-255.");
 		return index;
 	}
 private:
@@ -46,6 +59,7 @@ private:
 	static constexpr int ats_sound_playlooping = 0;
 	int m_vol = ats_sound_playlooping;
 	bool m_play = true;
+	bool FirstTime = true;
 };
 
 #endif // !CATS_SOUND_LOOP_INCLUDED

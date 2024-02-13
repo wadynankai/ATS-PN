@@ -3,8 +3,8 @@
 
 #include <filesystem>
 #include <fstream>
-#include "..\..\common\CSourceVoice.h"
 #include "..\..\common\LoadBveText.h"
+#include "..\..\common\CAudioFileInputNode.h"
 
 namespace DoorTimer
 {
@@ -17,9 +17,11 @@ namespace DoorTimer
 class CDoorcontrol
 {
 public:
-	static void CreateInstance(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2 = nullptr)
+	~CDoorcontrol();
+	static void CreateInstance(const std::filesystem::path& moduleDir,
+		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr)
 	{
-		if (!instance)instance.reset(new CDoorcontrol(moduleDir, pXau2));
+		if (!instance)instance.reset(new CDoorcontrol(moduleDir, graph, outputNode));
 	}
 /*	static void Delete()noexcept
 	{
@@ -40,7 +42,8 @@ public:
 
 private:
 	CDoorcontrol() = delete;
-	CDoorcontrol(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2 = nullptr);
+	CDoorcontrol(const std::filesystem::path& moduleDir, 
+		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr);
 	CDoorcontrol& operator=(CDoorcontrol&) = delete;
 	CDoorcontrol& operator=(CDoorcontrol&&) = delete;
 	inline static std::unique_ptr<CDoorcontrol> instance;
@@ -54,9 +57,9 @@ private:
 	int m_OpenTime = 0, m_OpenTime_pre = 0;//ÉhÉAÇ™äJÇ¢ÇƒÇ©ÇÁÇÃéûä‘
 	int m_sanoTrack = 0, m_nambaTrack = 0;//êÚç≤ñÏÇ∆ìÔîgÇÃî‘ê¸
 
-	winrt::com_ptr<IXAudio2> m_pXAudio2;
-	CSourceVoice m_DoorClsL, m_DoorClsR, m_DoorOpnL, m_DoorOpnR;
-
+	winrt::Windows::Media::Audio::AudioGraph m_graph;
+	winrt::Windows::Media::Audio::AudioDeviceOutputNode m_outputNode;
+	CAudioFileInputNode m_DoorClsL, m_DoorClsR, m_DoorOpnL, m_DoorOpnR;
 };
 
 
@@ -73,7 +76,7 @@ inline void CDoorcontrol::Running(const int time) noexcept
 		if (m_OpenTime_pre < DoorTimer::NambaCls && m_OpenTime >= DoorTimer::NambaCls)
 		{
 			if (m_DoorClsL)m_DoorClsL.flag = true;
-			if (m_DoorClsL)m_DoorClsL->Start();
+			if (m_DoorClsL)m_DoorClsL.Start();
 		}
 		if (m_DoorClsL)if (m_DoorClsL.flag && !m_DoorClsL.isRunning())doorUmi = 1, m_DoorClsL.flag = false, m_pilotLampL = true;
 	}
@@ -82,7 +85,7 @@ inline void CDoorcontrol::Running(const int time) noexcept
 		if (m_OpenTime_pre < DoorTimer::NambaCls && m_OpenTime >= DoorTimer::NambaCls)
 		{
 			if (m_DoorClsR)m_DoorClsR.flag = true;
-			if (m_DoorClsR)m_DoorClsR->Start();
+			if (m_DoorClsR)m_DoorClsR.Start();
 		}
 		if (m_DoorClsR)if (m_DoorClsR.flag && !m_DoorClsR.isRunning())doorYama = 1, m_DoorClsR.flag = false, m_pilotLampR = true;
 	}
@@ -90,14 +93,14 @@ inline void CDoorcontrol::Running(const int time) noexcept
 	{
 		if (m_OpenTime_pre < DoorTimer::open && m_OpenTime >= DoorTimer::open)
 		{
-			if (m_DoorOpnR)m_DoorOpnR->Start();
+			if (m_DoorOpnR)m_DoorOpnR.Start();
 			doorUmi = 2;
 			m_pilotLampR = false;
 		}
 		if (m_OpenTime_pre < DoorTimer::SanoCls2 && m_OpenTime >= DoorTimer::SanoCls2)
 		{
 			if (m_DoorClsR)m_DoorClsR.flag = true;
-			if (m_DoorClsR)m_DoorClsR->Start();
+			if (m_DoorClsR)m_DoorClsR.Start();
 		}
 		if (m_DoorClsR)if (m_DoorClsR.flag && !m_DoorClsR.isRunning())doorUmi = 0, m_DoorClsR.flag = false, m_pilotLampR = true;
 	}
@@ -105,14 +108,14 @@ inline void CDoorcontrol::Running(const int time) noexcept
 	{
 		if (m_OpenTime_pre < DoorTimer::open && m_OpenTime >= DoorTimer::open)
 		{
-			if (m_DoorOpnR)m_DoorOpnR->Start();
+			if (m_DoorOpnR)m_DoorOpnR.Start();
 			doorYama = 2;
 			m_pilotLampR = false;
 		}
 		if (m_OpenTime_pre < DoorTimer::SanoCls5 && m_OpenTime >= DoorTimer::SanoCls5)
 		{
 			if (m_DoorClsR)m_DoorClsR.flag = true;
-			if (m_DoorClsR)m_DoorClsR->Start();
+			if (m_DoorClsR)m_DoorClsR.Start();
 		}
 		if (m_DoorClsR)if (m_DoorClsR.flag && !m_DoorClsR.isRunning())doorYama = 0, m_DoorClsR.flag = false, m_pilotLampR = true;
 	}
@@ -166,13 +169,13 @@ inline void CDoorcontrol::NambaDoorOpn(void)noexcept
 {
 	if (m_nambaF && !m_pilotLamp && m_pilotLampR && (m_nambaTrack == 2 || m_nambaTrack == 4 || m_nambaTrack == 6 || m_nambaTrack == 8))//ìÔîgãÙêîî‘ê¸
 	{
-		if (m_DoorOpnR)m_DoorOpnR->Start();
+		if (m_DoorOpnR)m_DoorOpnR.Start();
 		doorYama = 2;
 		m_pilotLampR = false;
 	}
 	else if (m_nambaF && !m_pilotLamp && m_pilotLampL && (m_nambaTrack == 1 || m_nambaTrack == 3 || m_nambaTrack == 5 || m_nambaTrack == 7))//ìÔîgäÔêîî‘ê¸
 	{
-		if (m_DoorOpnL)m_DoorOpnL->Start();
+		if (m_DoorOpnL)m_DoorOpnL.Start();
 		doorUmi = 2;
 		m_pilotLampL = false;
 	}
