@@ -198,7 +198,7 @@ protected:
 	Xaudio2CSourvoiceInterface(nullptr_t p = nullptr) noexcept {}
 	//ムーブコンストラクタ
 	Xaudio2CSourvoiceInterface(Xaudio2CSourvoiceInterface&& right) noexcept :
-		m_pXAudio2(std::exchange(right.m_pXAudio2, nullptr)), m_pSourceVoice(std::exchange(right.m_pSourceVoice, nullptr)),
+		m_pXAudio2(std::move(right.m_pXAudio2)), m_pSourceVoice(std::exchange(right.m_pSourceVoice, nullptr)),
 		m_LoopCount(right.m_LoopCount), m_audioData(std::move(right.m_audioData)), m_pWfx(std::move(right.m_pWfx)),
 		m_pBuffer(std::move(right.m_pBuffer)), m_started(std::exchange(right.m_started,false)), m_Flags(right.m_Flags),
 		m_MaxFrequencyRatio(right.m_MaxFrequencyRatio), m_pCallback(right.m_pCallback),
@@ -208,7 +208,7 @@ protected:
 		const winrt::com_ptr<IXAudio2>& Xau2,//IXAudio2インターフェースへのポインタ 
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2.0
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -227,8 +227,7 @@ protected:
 	{
 		if (m_pXAudio2)
 		{
-			if (m_started)Stop();
-			if (m_pSourceVoice)std::exchange(m_pSourceVoice, nullptr)->DestroyVoice();
+			Destroy_Voice();
 		}
 	}
 	winrt::com_ptr<IXAudio2> m_pXAudio2;//IXAudio2へのポインタ
@@ -236,7 +235,7 @@ protected:
 	std::vector<BYTE> m_audioData{};//音声データを保存する領域
 	UINT32 m_LoopCount = XAUDIO2_LOOP_INFINITE;///ループカウント（1回の場合は0，2回の場合は1，…省略した場合は無限ループ
 	UINT32 m_Flags = 0x0;//フラグ
-	float m_MaxFrequencyRatio = XAUDIO2_MAX_FREQ_RATIO;//ピッチの最大値，省略した場合は1024
+	float m_MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO;//ピッチの最大値，2
 	IXAudio2VoiceCallback* m_pCallback = nullptr;//コールバックへのポインタ，省略可
 	XAUDIO2_VOICE_SENDS* m_pSendList = nullptr;//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 	XAUDIO2_EFFECT_CHAIN* m_pEffectChain = nullptr;//エフェクトチェーン構造体へのポインタ，省略可
@@ -254,7 +253,14 @@ protected:
 		{
 			XAUDIO2_VOICE_STATE state = { 0 };
 			GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-			return state.BuffersQueued > 0;
+			return state.BuffersQueued > 0 && m_started;
+		}
+	}
+	void Destroy_Voice()noexcept
+	{
+		if (decltype(m_pSourceVoice) tmp = std::exchange(m_pSourceVoice, nullptr))
+		{
+			tmp->DestroyVoice();
 		}
 	}
 
@@ -332,7 +338,7 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -345,7 +351,7 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -358,7 +364,7 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -372,7 +378,7 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -388,7 +394,7 @@ public:
 	inline void reset(nullptr_t p = nullptr) noexcept
 	{
 		if (m_started)Stop();
-		if (m_pSourceVoice)std::exchange(m_pSourceVoice, nullptr)->DestroyVoice();
+		Destroy_Voice();
 		m_pXAudio2 = {};
 		m_LoopCount = XAUDIO2_LOOP_INFINITE;
 		m_audioData.clear();
@@ -397,7 +403,7 @@ public:
 		m_started = false;
 		flag = false;
 		m_Flags = 0x0;
-		m_MaxFrequencyRatio = XAUDIO2_MAX_FREQ_RATIO;
+		m_MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO;
 		m_pCallback = nullptr;
 		m_pSendList = nullptr;
 		m_pEffectChain = nullptr;
@@ -409,7 +415,7 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
@@ -426,14 +432,14 @@ public:
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		const UINT32 LoopCount = XAUDIO2_LOOP_INFINITE,//ループカウント（1回の場合は0，2回の場合は1，…，省略した場合は無限ループ
 		const UINT32 Flags = 0x0,//フラグ
-		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は1024
+		const float MaxFrequencyRatio = XAUDIO2_DEFAULT_FREQ_RATIO,//ピッチの最大値，省略した場合は2
 		IXAudio2VoiceCallback* const pCallback = nullptr,//コールバックへのポインタ，省略可
 		XAUDIO2_VOICE_SENDS* const pSendList = nullptr,//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 		XAUDIO2_EFFECT_CHAIN* const pEffectChain = nullptr//エフェクトチェーン構造体へのポインタ，省略可
 	) noexcept
 	{
 		if (m_started)Stop();
-		if (m_pSourceVoice)std::exchange(m_pSourceVoice, nullptr)->DestroyVoice();
+		Destroy_Voice();
 		m_audioData.clear();
 		if (!m_pWfx) m_pWfx = std::make_unique<WAVEFORMATEX>();
 		*m_pWfx = { 0 };
@@ -514,7 +520,7 @@ public:
 	inline CSourceVoice& operator =(const CSourceVoice& right) noexcept
 	{
 		if (m_started)Stop();
-		if (m_pSourceVoice)std::exchange(m_pSourceVoice, nullptr)->DestroyVoice();//代入するため，一旦DestroyVoice
+		Destroy_Voice();//代入するため，一旦DestroyVoice
 		m_pXAudio2 = right.m_pXAudio2;
 		m_LoopCount = right.m_LoopCount;
 		m_audioData = right.m_audioData;
@@ -560,9 +566,9 @@ public:
 		if (*this != right)
 		{
 			if (m_started)Stop();
-			if (m_pSourceVoice)m_pSourceVoice->DestroyVoice();//ポインタを付け替えるため，DestroyVoice
+			Destroy_Voice();//ポインタを付け替えるため，DestroyVoice
 			m_pSourceVoice = right.m_pSourceVoice;
-			m_pXAudio2 = std::exchange(right.m_pXAudio2, nullptr);
+			m_pXAudio2 = std::move(right.m_pXAudio2);
 			m_LoopCount = right.m_LoopCount;
 			m_audioData = std::move(right.m_audioData);
 			m_pWfx = std::move(right.m_pWfx);
@@ -606,7 +612,7 @@ public:
 		}
 	}
 	//XAUDIO2_BUFFER 構造体の設定
-	void setPlayLength(UINT32 PlayBegin = 0, UINT32 PlayLength = 0, UINT32 LoopBegin = 0, UINT32 LoopLength = 0, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE)noexcept
+	void setPlayLength(UINT32 PlayBegin = 0U, UINT32 PlayLength = 0U, UINT32 LoopBegin = 0U, UINT32 LoopLength = 0U, UINT32 LoopCount = XAUDIO2_LOOP_INFINITE)noexcept
 	{
 		if (m_pBuffer)
 		{
@@ -619,10 +625,6 @@ public:
 			m_pBuffer->LoopBegin = LoopBegin;
 			m_pBuffer->LoopLength = LoopLength;
 			m_pBuffer->LoopCount = LoopCount;
-			if (m_pSourceVoice)
-			{
-				m_pSourceVoice->SubmitSourceBuffer(m_pBuffer.get());
-			}
 		}
 	}
 	//XAUDIO2_BUFFER 構造体の再読み込み
@@ -633,6 +635,16 @@ public:
 			m_pSourceVoice->FlushSourceBuffers();
 			m_pSourceVoice->SubmitSourceBuffer(m_pBuffer.get());
 		}
+	}
+	//一時停止（m_startedとm_bufferを変更せずに停止する。）
+	HRESULT pause(const UINT32 OperationSet = XAUDIO2_COMMIT_NOW) noexcept
+	{
+		return m_pSourceVoice->Stop(OperationSet);
+	}
+	//一時停止の解除（m_startedとm_bufferを変更せず再生する。）
+	HRESULT pauseDefeat(const UINT32 OperationSet = XAUDIO2_COMMIT_NOW)noexcept
+	{
+		return m_pSourceVoice->Start(OperationSet);
 	}
 	//trueの時に開始するなど（外部から自由に使う）
 	bool flag = false;
@@ -772,7 +784,8 @@ private:
 //				auto currentDataSize = m_audioData.size();
 //				m_audioData.resize(currentDataSize + dwBufSize);
 //				CopyMemory(m_audioData.data() + currentDataSize, pbData, dwBufSize);
-				m_audioData.insert(m_audioData.cend(), pbData, pbData + dwBufSize);
+//				m_audioData.insert(m_audioData.cend(), pbData, pbData + dwBufSize);
+				std::copy(pbData, pbData + dwBufSize, std::back_inserter(m_audioData));
 				hr = pBuf->Unlock();//メモリの解放（deleteしてはいけない）
 			}
 		}

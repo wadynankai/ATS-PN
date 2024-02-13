@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <filesystem>
+#include <optional>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10
@@ -42,6 +43,8 @@ public:
 	void initATSPN(void)noexcept;
 	//リセットボタン
 	void resetATSPN(void)noexcept;
+	//編成長の設定
+	//void setFormationLength(int)noexcept;
 	//PN制御実行
 	void RunPNcontrol(void)noexcept;
 	// 駅通防止
@@ -109,23 +112,31 @@ private:
 	//駅通防止停止距離
 	double m_halt_dist = 0.0;
 	//速度制限速度
-	float m_LimitSpeed_Speed = std::numeric_limits<float>::max();
+	float m_LimitSpeed_Speed = std::numeric_limits<float>::max(), m_LimitSpeed_Speed_pre = std::numeric_limits<float>::max();
 	//速度制限開始距離
 	double m_LimitSpeed_dist = 0.0;
 	//終端防護距離
 	double m_Terminal_Dist = 0.0;
 	//線区最高速度
-	double m_Line_Max_Speed = std::numeric_limits<float>::max();
+	float m_Line_Max_Speed = 180.0f;
 	//駅通防止パターンあり
 	bool m_halt_P = false;
 	//線区最高速度ブレーキ
 	bool m_LineMaxSpeed_b = false;
+	//線区最高速度非常ブレーキ
+	bool m_LineMaxSpeed_emg = false;
 	//駅通防止ブレーキ
 	bool m_halt_b = false;
+	//駅通防止非常ブレーキ
+	bool m_halt_emg = false;
 	//速度制限ブレーキ
 	bool m_LimitSpeed_b = false;
+	//速度制限非常ブレーキ
+	bool m_LimitSpeed_emg = false;
 	//終端防護ブレーキ
 	bool m_TerminalSafety_b = false;
+	//終端防護非常ブレーキ
+	bool m_TerminalSafety_emg = false;
 	//速度
 	float& m_TrainSpeed;
 	//前回との時刻の差
@@ -134,7 +145,7 @@ private:
 	double& m_DeltaL;
 	//ブレーキハンドルの位置
 	int& m_Brake;
-	//ブレーキパターン
+	//制動曲線
 	std::vector<DISTANCE_SET> m_pattern;
 	//現在の速度からの停止距離
 	double m_stopDist = 0.0;
@@ -146,6 +157,10 @@ private:
 	std::vector<DISTANCE_SET> m_ErrPatten;
 	//現在の誤差
 	double m_CurrentErr = 0.0;
+	//編成長
+	static constexpr double m_formationLength = 68.0;
+	//制限解除からの距離
+	double m_defeatDistance = std::numeric_limits<double>::max();
 
 	static constexpr float m_deceleration = 3.7f * 7.2f;//減速定数（減速度[km/h/s] x 7.2）
 	static constexpr float m_approach = m_deceleration * 0.5f;//P接近表示条件

@@ -1,9 +1,40 @@
 #include "CAutoAnnounce.h"
-CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, int& DelT) :
+CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, int& DelT,
+	const winrt::Windows::Media::Audio::AudioGraph& graph, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode):
 	m_DelT(DelT),//1ÉtÉåÅ[ÉÄÇÃéûä‘
-	m_pXAudio2(pXau2),
+	m_graph(graph),
+	m_outputNode(outputNode),
+	m_Announce1(nullptr),
+	m_Announce2(nullptr),
 	m_module_dir(moduleDir),
-	m_table_dir(moduleDir / L"announce\\"){}
+	m_table_dir(moduleDir / L"announce\\")
+{
+	if (graph == nullptr)
+	{
+		winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::GameMedia };
+		settings.MaxPlaybackSpeedFactor(1.0);
+		winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
+		if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+		{
+			m_graph = result.Graph();
+
+			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			{
+				m_outputNode = oResult.DeviceOutputNode();
+			}
+		}
+		else if (outputNode == nullptr)
+		{
+			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			{
+				m_outputNode = oResult.DeviceOutputNode();
+			}
+		}
+		m_graph.Start();
+	}
+}
 
 CAutoAnnounce::~CAutoAnnounce()noexcept
 {
@@ -15,6 +46,10 @@ CAutoAnnounce::~CAutoAnnounce()noexcept
 	{
 		m_thread2.join();
 	}
+	m_Announce1.Close();
+	m_Announce2.Close();
+	if (m_outputNode)m_outputNode.Close();
+	if (m_graph)m_graph.Close();
 }
 
 void CAutoAnnounce::setTrainNo(int number)
@@ -23,7 +58,7 @@ void CAutoAnnounce::setTrainNo(int number)
 	m_first = AnnounceSet{};
 	m_A_Set.clear();
 	std::wifstream table(m_table_dir / (std::to_wstring(m_trainNo) + L".csv"));
-	table.imbue(std::locale("ja-JP"));
+	table.imbue(std::locale(".UTF-8"));
 //	std::wofstream ofs(m_module_dir + L"anndebug.txt");
 	if (!table.fail())
 	{

@@ -1,8 +1,6 @@
 #ifndef _ATS_PN_INCLUDED_
 #define _ATS_PN_INCLUDED_
 
-#include <filesystem>
-
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10
@@ -17,14 +15,17 @@
 #define NOMINMAX
 #endif
 #include <Windows.h>
-#include <mfapi.h>
 #include "atsplugin.h"
 #include "..\..\common\LoadBveText.h"
 #include "CATSPN.h"
-#include "..\..\common\CSourceVoice.h"
 #include "CDoorcontrol.h"
 #include "CAutoAnnounce.h"
 #include "CTraponBackGround.h"
+#include "..\..\common\CAtsSound.h"
+#include "..\..\common\CAudioFileInputNode.h"
+
+
+
 
 namespace PN_Beacon
 {
@@ -51,22 +52,29 @@ inline int g_StopSta;//停車駅名
 inline int g_AstTimer;//アスタリスク点滅タイマー
 inline bool g_Aster;//アスタリスク
 inline int g_timetable = 0;//時刻表
+inline bool g_home_push = false;//Homeが押されている間True
+inline bool g_insert_push = false;//Insertが押されている間True
 inline bool g_delete_push = false;//Deleteが押されている間True
 inline bool g_PgUp_push = false;//Deleteが押されている間True
 inline bool g_PgDn_push = false;//Deleteが押されている間True
 
-inline winrt::com_ptr<IXAudio2> pXAudio2;
-inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
+inline winrt::Windows::Media::Audio::AudioGraph g_graph = nullptr;
+inline winrt::Windows::Media::Audio::AudioDeviceOutputNode g_outputNode = nullptr;
 inline std::filesystem::path g_module_dir;
-inline CSourceVoice g_Ding;
+inline constexpr winrt::Windows::Foundation::TimeSpan dingDuration = std::chrono::milliseconds(42);
 inline bool g_Space = false;
-inline CSourceVoice g_Ding1;
-inline CSourceVoice g_Ding2;
+
+inline CAudioFileInputNode g_Ding = nullptr, g_Ding0 = nullptr, g_Ding1 = nullptr, g_Ding2 = nullptr;
 //inline std::array<int, 2> g_sta_no = { 0,0 };
 inline bool g_ShasyouBell = false;//車掌ベル機能有効
 inline bool g_Bell1 = false;
 inline bool g_Bell2 = false;
 inline int g_belltimer = 0;
+
+inline CAtsSound<26> g_trapon_push;
+inline CAtsSound<27> g_trapon_release;
+inline CAtsSound<28> g_trapon_on;
+inline CAtsSound<29> g_trapon_off;
 
 
 #endif // !_ATS_PN_INCLUDED_

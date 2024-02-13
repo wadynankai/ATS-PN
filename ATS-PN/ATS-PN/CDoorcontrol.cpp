@@ -9,7 +9,7 @@ inline void CDoorcontrol::loadconfig(void)
 	std::wifstream Config(m_module_dir / L"DoorSoundConfig.txt");
 	if (!Config.fail())
 	{
-		Config.imbue(std::locale("ja-JP"));
+		Config.imbue(std::locale(".UTF-8"));
 		while (!Config.eof())
 		{
 			std::wstring loadline;
@@ -26,21 +26,17 @@ inline void CDoorcontrol::loadconfig(void)
 		}
 	}
 	Config.close();
-	if (m_pXAudio2)
-	{
-		m_DoorClsL.reset(m_pXAudio2, DoorClsL_name, 0, XAUDIO2_VOICE_NOPITCH);
-		m_DoorClsR.reset(m_pXAudio2, DoorClsR_name, 0, XAUDIO2_VOICE_NOPITCH);
-		m_DoorOpnL.reset(m_pXAudio2, DoorOpnL_name, 0, XAUDIO2_VOICE_NOPITCH);
-		m_DoorOpnR.reset(m_pXAudio2, DoorOpnR_name, 0, XAUDIO2_VOICE_NOPITCH);
-	}
-	if (m_DoorClsL)m_DoorClsL->SetVolume(1.0f);
-	if (m_DoorClsR)m_DoorClsR->SetVolume(1.0f);
-	if (m_DoorOpnL)m_DoorOpnL->SetVolume(1.0f);
-	if (m_DoorOpnR)m_DoorOpnR->SetVolume(1.0f);
+
+	m_DoorClsL = CAudioFileInputNode(m_graph, m_outputNode, DoorClsL_name, 0);
+	m_DoorClsR = CAudioFileInputNode(m_graph, m_outputNode, DoorClsR_name, 0);
+	m_DoorOpnL = CAudioFileInputNode(m_graph, m_outputNode, DoorOpnL_name, 0);
+	m_DoorOpnR = CAudioFileInputNode(m_graph, m_outputNode, DoorOpnR_name, 0);
 }
 
-CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2) :
-	m_pXAudio2(pXau2),
+CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir,
+	const winrt::Windows::Media::Audio::AudioGraph& graph, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode) :
+	m_graph(graph),
+	m_outputNode(outputNode),
 	m_module_dir(moduleDir),
 	m_tableFileName(m_module_dir / L"doorConfig.csv"),
 	doorUmi(0), doorYama(0), m_trainNo(0),
@@ -49,21 +45,56 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir, const winrt::
 	m_OpenTime(0), m_OpenTime_pre(0),
 	m_sanoF(false), m_sanoTrack(0)
 {
+	if (graph == nullptr)
+	{
+		winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::GameMedia };
+		settings.MaxPlaybackSpeedFactor(1.0);
+		winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
+		if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+		{
+			m_graph = result.Graph();
+
+			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			{
+				m_outputNode = oResult.DeviceOutputNode();
+			}
+		}
+		else if (outputNode == nullptr)
+		{
+			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			{
+				m_outputNode = oResult.DeviceOutputNode();
+			}
+		}
+		m_graph.Start();
+	}
 	loadconfig();
+}
+
+CDoorcontrol::~CDoorcontrol()
+{
+	m_DoorClsL.Close();
+	m_DoorClsR.Close();
+	m_DoorOpnL.Close();
+	m_DoorOpnR.Close();
+	if (m_outputNode)m_outputNode.Close();
+	if (m_graph)m_graph.Close();
 }
 
 void CDoorcontrol::setTrainNo(const int no)
 {
 	m_trainNo = no;
-	std::ifstream table(m_tableFileName);
-	table.imbue(std::locale("ja-JP"));
+	std::wifstream table(m_tableFileName);
+	table.imbue(std::locale(".UTF-8"));
 	if (!table.fail())
 	{
 		while (!table.eof())
 		{
-			std::string loadline;
+			std::wstring loadline;
 			std::getline(table, loadline);
-			std::vector<std::string> columun;
+			std::vector<std::wstring> columun;
 			cleanUpBveStr(loadline, table.getloc());
 			eraseSpace(loadline, table.getloc());
 			if (!loadline.empty())

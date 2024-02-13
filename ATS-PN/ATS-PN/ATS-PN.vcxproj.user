@@ -2,16 +2,17 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>D:\Favorites\mackoy\BveTs6\BveTs.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>C:\Program Files\mackoy\BveTs6\BveTs.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>"D:\Favorites\mackoy\BveTs5\Scenarios\南海 - 南海電鉄南海線（普通）7100.txt"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>D:\Favorites\mackoy\BveTs5\BveTs.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommand>
-    </LocalDebuggerCommand>
+    <LocalDebuggerCommand>C:\Program Files\mackoy\BveTs6\BveTs.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>"D:\Favorites\mackoy\BveTs5\Scenarios\南海 - 南海電鉄南海線（普通）7100.txt"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

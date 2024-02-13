@@ -6,9 +6,8 @@
 #include <fstream>
 #include <filesystem>
 #include <thread>
-
 #include "..\..\common\LoadBveText.h"
-#include "..\..\common\CSourceVoice.h"
+#include "..\..\common\CAudioFileInputNode.h"
 
 namespace dep_distance
 {
@@ -36,9 +35,10 @@ class CAutoAnnounce
 {
 public:
 	~CAutoAnnounce()noexcept;
-	static void CreateInstance(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, int& DelT)
+	static void CreateInstance(const std::filesystem::path& moduleDir, int& DelT, 
+		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr)
 	{
-		if (!instance)instance.reset(new CAutoAnnounce(moduleDir, pXau2, DelT));
+		if (!instance)instance.reset(new CAutoAnnounce(moduleDir, DelT, graph, outputNode));
 	}
 /*	static void Delete()noexcept
 	{
@@ -56,7 +56,8 @@ public:
 
 private:
 	CAutoAnnounce() = delete;
-	CAutoAnnounce(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, int& DelT);
+	CAutoAnnounce(const std::filesystem::path& moduleDir, int& DelT, 
+		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr);
 	CAutoAnnounce& operator=(CAutoAnnounce&) = delete;
 	CAutoAnnounce& operator=(CAutoAnnounce&&) = delete;
 	inline static std::unique_ptr<CAutoAnnounce> instance;
@@ -76,8 +77,9 @@ private:
 	double m_A_Loc1{ std::numeric_limits<double>::max() };//出発放送の距離程を保存
 	double m_A_Loc2{ std::numeric_limits<double>::max() };//到着放送の距離程を保存
 
-	winrt::com_ptr<IXAudio2> m_pXAudio2;
-	CSourceVoice m_Announce1{}, m_Announce2{};
+	winrt::Windows::Media::Audio::AudioGraph m_graph;
+	winrt::Windows::Media::Audio::AudioDeviceOutputNode m_outputNode;
+	CAudioFileInputNode m_Announce1 = nullptr, m_Announce2 = nullptr;
 	std::filesystem::path* m_pAnnounce1 = nullptr, * m_pAnnounce2 = nullptr;
 	std::thread m_thread1{}, m_thread2{};
 	bool m_first_time = true;
@@ -102,7 +104,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 			}
 //			Announce1Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread1 = std::thread([&] {
-				m_Announce1.reset(m_pXAudio2, *m_pAnnounce1, 0, XAUDIO2_VOICE_NOPITCH);
+				m_Announce1 = CAudioFileInputNode(m_graph, m_outputNode, *m_pAnnounce1, 0);
 //				Announce1Load = false;
 				});//放送を登録
 			m_Announce1.flag = false;
@@ -115,7 +117,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 			}
 //			Announce2Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread2 = std::thread([&] {
-				m_Announce2.reset(m_pXAudio2, *m_pAnnounce2, 0, XAUDIO2_VOICE_NOPITCH);
+				m_Announce2 = CAudioFileInputNode(m_graph, m_outputNode, *m_pAnnounce2, 0);
 //				Announce2Load = false;
 				});//放送を登録
 			m_Announce2.flag = false;
@@ -131,8 +133,8 @@ inline void CAutoAnnounce::Running(const double& loc)
 			{
 				m_thread2.join();
 			}
-			m_Announce1->Stop();
-			m_Announce2->Stop();
+			m_Announce1.Stop();
+			m_Announce2.Stop();
 		}
 		else
 		{
@@ -142,7 +144,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread1.join();
 				}
-				m_Announce1->Start();
+				m_Announce1.Start();
 			}
 			if (m_Location_pre < m_A_Loc2 && m_Location >= m_A_Loc2)
 			{
@@ -150,7 +152,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread2.join();
 				}
-				m_Announce2->Start();
+				m_Announce2.Start();
 			}
 		}
 	}
@@ -187,7 +189,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				}
 				else
 				{
-					m_Announce1.reset(nullptr);//前の放送を消去
+					m_Announce1.Close();//前の放送を消去
 				}
 				if (!a.name2.empty())
 				{
@@ -196,7 +198,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				}
 				else
 				{
-					m_Announce2.reset();//前の放送を消去
+					m_Announce2.Close();//前の放送を消去
 				}
 				switch (a.mode)//出発後放送の位置を登録
 				{
@@ -215,8 +217,6 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 					break;
 				}
 				m_A_Loc2 = a.location2;//到着前放送の位置を登録
-				m_Announce1->SetVolume(1.0f);//音量を1に設定する（これがないと，音量0になる）
-				m_Announce2->SetVolume(1.0f);//音量を1に設定する（これがないと，音量0になる）
 				break;
 			}
 		}
@@ -252,8 +252,6 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 			break;
 		}
 		m_A_Loc2 = m_first.location2;//到着前放送の位置を登録
-		m_Announce1->SetVolume(1.0f);//音量を1に設定する（これがないと，音量0になる）
-		m_Announce2->SetVolume(1.0f);//音量を1に設定する（これがないと，音量0になる）
 	}
 }
 

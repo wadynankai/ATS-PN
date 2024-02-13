@@ -15,7 +15,7 @@ private:
 	bool m_IcCard = false;//ICカード状態
 	bool m_white_ref = false;//カラー指令値
 	bool m_white = false;//現在のカラー
-	std::vector<int> m_Train_no{};//時刻表番号のリスト
+	std::vector<std::pair<size_t,size_t>> m_Train_no{};//時刻表番号のリスト(first:panel（配列）のインデックス，second:画像のインデックス）
 	size_t m_index = 0;//現在の時刻表インデックス
 public:
 	static CTrapon& GetInstance()noexcept
@@ -26,18 +26,19 @@ public:
 	void setTransitionCount(int count)noexcept
 	{
 		m_transitionCount = count;
-		m_transitionTime = 1000 / count;
+		m_transitionTime = 500 / count;
 		m_Train_no.clear();
 		m_power = false;
 	}
 	void changeColor()noexcept { m_white_ref = !m_white_ref; }//表示切替ボタン
-	void powerButton()noexcept //電源ボタン
+	bool powerButton()noexcept //電源ボタン
 	{
 		m_white_ref = false;
 		m_white = false;
 		m_count = 1;
 		m_index = 0;
 		m_power = !m_power; 
+		return m_power;
 	}
 	void wakeUp()noexcept //起動
 	{
@@ -52,18 +53,19 @@ public:
 		}
 	}
 	void IcCard()noexcept { m_IcCard = !m_IcCard; }
-	void addTrainNo(int no) noexcept
+	void addTrainNo(size_t index,size_t dia) noexcept
 	{ 
-		if (std::none_of(m_Train_no.cbegin(), m_Train_no.cend(), [&](int x) { return x == no; }))
+		std::pair<size_t, size_t> temp{ index,dia };
+		if (std::none_of(m_Train_no.cbegin(), m_Train_no.cend(), [&](std::pair<size_t, size_t> x) { return x == temp; }))
 		{
-			m_Train_no.emplace_back(no);
+			m_Train_no.emplace_back(temp);
 		}
 	}
-	int getTimeTable()noexcept
+	_NODISCARD const std::pair<size_t,size_t> getTimeTable() const noexcept
 	{
 		if (!m_power)//トラポンの電源が切れているとき
 		{
-			return 0;//透明画像
+			return { 100,0 };//透明画像
 
 		}
 		else [[likely]]
@@ -72,23 +74,40 @@ public:
 			{
 				if (!m_white)
 				{
-					return 1;
+					return { 100,1 };
 				}
 				else
 				{
-					return 2;
+					return { 100,2 };
 				}
 			}
 			else [[likely]]//ICカードが差さっているとき
 			{
-				if (!m_white)
+
+				switch (m_Train_no.at(m_index).first)
 				{
-					return 2 * m_Train_no.at(m_index) + 1;
+				case 100:
+					if (!m_white)
+					{
+						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second + 1 };
+					}
+					else
+					{
+						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second + 2 };
+					}
+					break;
+				default:
+					if (!m_white)
+					{
+						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second - 1 };
+					}
+					else
+					{
+						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second };
+					}
+					break;
 				}
-				else
-				{
-					return 2 * m_Train_no.at(m_index) + 2;
-				}
+
 			}
 		}
 	}
@@ -107,9 +126,9 @@ public:
 			--m_index;
 		}
 	}
-	_NODISCARD bool getColor()noexcept { return m_white; }
-	_NODISCARD bool getPower()noexcept { return m_power; }
-	_NODISCARD int getBackGround(int deltaT)noexcept
+	_NODISCARD const bool getColor()const noexcept { return m_white; }
+	_NODISCARD const bool getPower()const noexcept { return m_power; }
+	_NODISCARD const int getBackGround(const int deltaT)noexcept
 	{
 		if (!m_power)//電源切
 		{

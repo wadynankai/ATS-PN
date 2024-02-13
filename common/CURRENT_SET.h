@@ -6,7 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
-#include <charconv>
+#include <locale>
 #include "LoadBveText.h"
 
 using CURRENT_SET = std::pair<float, float>;
@@ -35,19 +35,20 @@ template <typename T> struct PairGreater
 template <typename T, typename X, typename Y> void makeTableFromCsv(
 	const T& name,//csvファイルの絶対パス
 	std::vector <std::pair<X, Y>>& table ,//テーブルとなるvector
-	size_t row = 1//csvファイルで読み込む列
+	const size_t row = 1,//csvファイルで読み込む列
+	const std::locale& loc ={}
 )
 {
 	table.clear();
-	std::ifstream csv(name);
+	std::wifstream csv(name);
 	if (csv.is_open())
 	{
-		csv.imbue(std::locale("ja-JP"));
-		std::string loadline;
+		csv.imbue(loc);
+		std::wstring loadline;
 		std::getline(csv, loadline);
 		while (!csv.eof())
 		{
-			std::vector<std::string> columun;
+			std::vector<std::wstring> columun;
 			std::getline(csv, loadline);
 			cleanUpBveStr(loadline, csv.getloc());
 			if (!loadline.empty())
@@ -57,11 +58,26 @@ template <typename T, typename X, typename Y> void makeTableFromCsv(
 				{
 					X speed{};
 					Y current{};
-					if (std::from_chars(columun.at(0).data(), columun.at(0).data() + columun.at(0).length(), speed).ec == std::errc{}
-						&& std::from_chars(columun.at(row).data(), columun.at(row).data() + columun.at(row).length(), current).ec == std::errc{})
-					{
-						table.emplace_back(speed, current);
-					}
+					if constexpr (std::is_same_v<X, int>)speed = std::stoi(columun.at(0));
+					else if constexpr (std::is_same_v<X, long>)speed = std::stol(columun.at(0));
+					else if constexpr (std::is_same_v<X, long long>)speed = std::stoll(columun.at(0));
+					else if constexpr (std::is_same_v<X, unsigned long>)speed = std::stoul(columun.at(0));
+					else if constexpr (std::is_same_v<X, unsigned long long>)speed = std::stoull(columun.at(0));
+					else if constexpr (std::is_same_v<X, float>)speed = std::stof(columun.at(0));
+					else if constexpr (std::is_same_v<X, double>)speed = std::stod(columun.at(0));
+					else if constexpr (std::is_same_v<X, long double>)speed = std::stold(columun.at(0));
+
+					if constexpr (std::is_same_v<Y, int>)current = std::stoi(columun.at(row));
+					else if constexpr (std::is_same_v<Y, long>)current = std::stol(columun.at(row));
+					else if constexpr (std::is_same_v<Y, long long>)current = std::stoll(columun.at(row));
+					else if constexpr (std::is_same_v<Y, unsigned long>)current = std::stoul(columun.at(row));
+					else if constexpr (std::is_same_v<Y, unsigned long long>)current = std::stoull(columun.at(row));
+					else if constexpr (std::is_same_v<Y, float>)current = std::stof(columun.at(row));
+					else if constexpr (std::is_same_v<Y, double>)current = std::stod(columun.at(row));
+					else if constexpr (std::is_same_v<Y, long double>)current = std::stold(columun.at(row));
+
+
+					table.emplace_back(speed, current);
 				}
 			}
 		}
@@ -78,29 +94,32 @@ template <typename T, typename X, typename Y> void makeTableFromCsv(
 template <typename T, typename X, typename Y> void makeTableFromCsv(
 	const T* name,//csvファイルの絶対パス
 	std::vector <std::pair<X, Y>>& table,//テーブルとなるvectorへのポインタ
-	size_t row = 1//csvファイルで読み込む列
+	const size_t row = 1,//csvファイルで読み込む列
+	const std::locale& loc = {}
 )
 {
-	makeTableFromCsv<std::basic_string<T>, X, Y>(static_cast<std::basic_string<T>>(name), table, row);
+	makeTableFromCsv<std::basic_string<T>, X, Y>(static_cast<std::basic_string<T>>(name), table, row, loc);
 }
 
 //csv読み込み(インデックスリスト使用)
 template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 	const T& name,//csvファイルの絶対パス
 	std::vector<std::vector <std::pair<X, Y>>>& table,//テーブルとなるvector
-	const U& index_list = {1}//csvファイルで読み込む列のリスト
+	const U& index_list = {1},//csvファイルで読み込む列のリスト
+	const std::locale& loc = {}
 )
 {
 	table.clear();
 	table.resize(index_list.size());
-	std::ifstream csv(name);
+	std::wifstream csv(name);
 	if (csv.is_open())
 	{
-		std::string loadline;
+		csv.imbue(loc);
+		std::wstring loadline;
 		std::getline(csv, loadline);
 		while (!csv.eof())
 		{
-			std::vector<std::string> columun;
+			std::vector<std::wstring> columun;
 			std::getline(csv, loadline);
 			cleanUpBveStr(loadline, csv.getloc());
 			if (!loadline.empty())
@@ -113,13 +132,27 @@ template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 					{
 						if (!columun.at(a).empty())
 						{
-							X speed{};
-							Y current{};
-							if (std::from_chars(columun.at(0).data(), columun.at(0).data() + columun.at(0).length(), speed).ec == std::errc{}
-								&& std::from_chars(columun.at(a).data(), columun.at(a).data() + columun.at(a).length(), current).ec == std::errc{})
-							{
-								itr->emplace_back(speed, current);
-							}
+							X speed;
+							Y current;
+							if constexpr (std::is_same_v<X, int>)speed = std::stoi(columun.at(0));
+							else if constexpr (std::is_same_v<X, long>)speed = std::stol(columun.at(0));
+							else if constexpr (std::is_same_v<X, long long>)speed = std::stoll(columun.at(0));
+							else if constexpr (std::is_same_v<X, unsigned long>)speed = std::stoul(columun.at(0));
+							else if constexpr (std::is_same_v<X, unsigned long long>)speed = std::stoull(columun.at(0));
+							else if constexpr (std::is_same_v<X, float>)speed = std::stof(columun.at(0));
+							else if constexpr (std::is_same_v<X, double>)speed = std::stod(columun.at(0));
+							else if constexpr (std::is_same_v<X, long double>)speed = std::stold(columun.at(0));
+
+							if constexpr (std::is_same_v<Y, int>)current = std::stoi(columun.at(a));
+							else if constexpr (std::is_same_v<Y, long>)current = std::stol(columun.at(a));
+							else if constexpr (std::is_same_v<Y, long long>)current = std::stoll(columun.at(a));
+							else if constexpr (std::is_same_v<Y, unsigned long>)current = std::stoul(columun.at(a));
+							else if constexpr (std::is_same_v<Y, unsigned long long>)current = std::stoull(columun.at(a));
+							else if constexpr (std::is_same_v<Y, float>)current = std::stof(columun.at(a));
+							else if constexpr (std::is_same_v<Y, double>)current = std::stod(columun.at(a));
+							else if constexpr (std::is_same_v<Y, long double>)current = std::stold(columun.at(a));
+
+							itr->emplace_back(speed, current);
 						}
 					}
 					++itr;
@@ -143,16 +176,23 @@ template <typename T,typename X, typename Y, typename U> void makeTableFromCsv(
 template <typename T, typename X, typename Y, typename U> void makeTableFromCsv(
 	const T* name,//csvファイルの絶対パス
 	std::vector<std::vector <std::pair<X, Y>>>& table,//テーブルとなるvector
-	const U& index_list = { 1 }//csvファイルで読み込む列のリスト
+	const U& index_list = { 1 },//csvファイルで読み込む列のリスト
+	const std::locale& loc = {}
 )
 {
-	makeTableFromCsv<std::basic_string<T>, X, Y, U>(static_cast<std::basic_string<T>>(name), table, index_list);
+	makeTableFromCsv<std::basic_string<T>, X, Y, U>(static_cast<std::basic_string<T>>(name), table, index_list, loc);
 }
 
 //2点間を通る直線の傾き
 template <typename X, typename Y> [[nodiscard]] inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
 	return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
+}
+
+//2点間を通る直線の傾き(逆関数)
+template <typename X, typename Y> [[nodiscard]] inline constexpr X slopeInv(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
+{
+	return (p2.first - p1.first) / (static_cast<X>(p2.second) - static_cast<X>(p1.second));
 }
 
 //2点間を通る直線の傾き
@@ -196,7 +236,7 @@ template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation
 	if (table.size() > 1)
 	{
 		size_t j = 0;
-		for(const auto& a: table)
+		for (const auto& a : table)
 		{
 			if (a.first >= value)break;
 			j++;
@@ -205,7 +245,7 @@ template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation
 		{
 			if (table.at(j).first != table.at(j - 1).first)
 			{
-				return slope(table.at(j), table.at(j - 1)) * (static_cast<Y>(value) - static_cast<Y>(table.at(j).first)) + table.at(j).second;
+				return slope(table.at(j), table.at(j - 1)) * static_cast<Y>(value - table.at(j).first) + table.at(j).second;
 			}
 			else return table.at(j).second;
 		}
@@ -213,7 +253,7 @@ template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation
 		{
 			if (table.at(j + 1).first != table.at(j).first)
 			{
-				return slope(table.at(j + 1), table.at(j)) * (static_cast<Y>(value) - static_cast<Y>(table.at(j + 1).first)) + table.at(j + 1).second;
+				return slope(table.at(j + 1), table.at(j)) * static_cast<Y>(value - table.at(j + 1).first) + table.at(j + 1).second;
 			}
 			else return table.at(j).second;
 		}
@@ -221,14 +261,56 @@ template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation
 		{
 			if (table.at(table.size() - 1).first != table.at(table.size() - 2).first)
 			{
-				return slope(table.at(table.size() - 1), table.at(table.size() - 2)) * (static_cast<Y>(value) - static_cast<Y>(table.at(table.size() - 1).first)) + table.at(table.size() - 1).second;
+				return slope(table.at(table.size() - 1), table.at(table.size() - 2)) * static_cast<Y>(value - table.at(table.size() - 1).first) + table.at(table.size() - 1).second;
 			}
 			else return table.at(table.size() - 1).second;
 		}
 	}
 	else if (table.size() == 1)return table.at(0).second;
-	else return value;
+	else return static_cast<Y>(value);
 }//線形補間
 
+//線形補間(逆関数)
+template <typename X, typename Y> [[nodiscard]] inline constexpr X interpolationInv(
+	const Y value,//Y座標（距離？）
+	const std::vector <std::pair<X, Y>>& table//テーブルとなるvector
+)noexcept
+{
+	if (table.size() > 1)
+	{
+		size_t j = 0;
+		for (const auto& a : table)
+		{
+			if (a.second >= value)break;
+			j++;
+		}
+		if (j > 0 && j < table.size())
+		{
+			if (table.at(j).second != table.at(j - 1).second)
+			{
+				return slopeInv(table.at(j), table.at(j - 1)) * static_cast<X>(value - table.at(j).second) + table.at(j).first;
+			}
+			else return table.at(j).first;
+		}
+		else if (j == 0)
+		{
+			if (table.at(j + 1).second != table.at(j).second)
+			{
+				return slopeInv(table.at(j + 1), table.at(j)) * static_cast<X>(value - table.at(j + 1).second) + table.at(j + 1).first;
+			}
+			else return table.at(j).first;
+		}
+		else
+		{
+			if (table.at(table.size() - 1).second != table.at(table.size() - 2).second)
+			{
+				return slopeInv(table.at(table.size() - 1), table.at(table.size() - 2)) * static_cast<X>(value - table.at(table.size() - 1).second) + table.at(table.size() - 1).first;
+			}
+			else return table.at(table.size() - 1).first;
+		}
+	}
+	else if (table.size() == 1)return table.at(0).first;
+	else return static_cast<X>(value);
+}//線形補間(逆関数)
 
 #endif // !CURRENT_SET_INCLUDED

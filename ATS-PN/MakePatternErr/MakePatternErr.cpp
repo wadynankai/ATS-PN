@@ -6,8 +6,8 @@
 // Called when this plug-in is loaded
 ATS_API void Load(void)
 {
-	makeTableFromCsv(g_module_dir / L"AtsPnPattern.csv",g_vecPattern);
-	makeTableFromCsv(g_module_dir / L"AtsPnErrPattern.csv", g_vecErrPatten);
+	makeTableFromCsv(g_module_dir / L"AtsPnPattern.csv", g_vecPattern, 1, std::locale(".UTF-8"));
+	makeTableFromCsv(g_module_dir / L"AtsPnErrPattern.csv", g_vecErrPatten, 1, std::locale(".UTF-8"));
 }
 
 // Called when this plug-in is unloaded
@@ -20,10 +20,11 @@ ATS_API void Dispose(void)
 		csv.open(g_module_dir / L"AtsPnErrPattern.csv");
 		if (csv.is_open())
 		{
-			csv << "ATS-PN用ブレーキパターン誤差ファイル" << std::endl;
+			csv.imbue(std::locale(".UTF-8"));
+			csv << L"ATS-PN用ブレーキパターン誤差ファイル" << std::endl;
 			for (const auto& a : g_vecErrPatten)
 			{
-				csv << std::setprecision(std::numeric_limits<DISTANCE_SET::first_type>::max_digits10) << a.first << ","
+				csv << std::setprecision(std::numeric_limits<DISTANCE_SET::first_type>::max_digits10) << a.first << L","
 					<< std::setprecision(std::numeric_limits<DISTANCE_SET::second_type>::max_digits10) << a.second << std::endl;
 			}
 			csv.close();
