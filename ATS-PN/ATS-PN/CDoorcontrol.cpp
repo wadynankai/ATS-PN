@@ -75,12 +75,17 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir,
 
 CDoorcontrol::~CDoorcontrol()
 {
-	m_DoorClsL.Close();
-	m_DoorClsR.Close();
-	m_DoorOpnL.Close();
-	m_DoorOpnR.Close();
-	if (m_outputNode)m_outputNode.Close();
-	if (m_graph)m_graph.Close();
+	std::thread th{ [this]()
+	{
+		this->m_graph.Stop();
+		this->m_DoorClsL = nullptr;
+		this->m_DoorClsR = nullptr;
+		this->m_DoorOpnL = nullptr;
+		this->m_DoorOpnR = nullptr;
+		this->m_outputNode = nullptr;
+		this->m_graph = nullptr;
+	} };
+	if(th.joinable())th.detach();
 }
 
 void CDoorcontrol::setTrainNo(const int no)

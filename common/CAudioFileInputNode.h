@@ -72,16 +72,24 @@ public:
 	}
 
 	//デストラクタ
-	~CAudioFileInputNode()noexcept = default;
+	~CAudioFileInputNode() = default;
 
 	//コピー代入
 	inline CAudioFileInputNode& operator=(const CAudioFileInputNode& right) = default;
+	//ムーブ代入
 	inline CAudioFileInputNode& operator=(CAudioFileInputNode&& right)noexcept
 	{
-		Close();
 		m_node = std::move(right.m_node);
 		m_started = std::move(right.m_started);
 		flag = std::move(right.flag);
+		return *this;
+	}
+	//nullptrの代入
+	inline CAudioFileInputNode& operator=(nullptr_t p)noexcept
+	{
+		m_node = nullptr;
+		m_started = false;
+		flag = false;
 		return *this;
 	}
 	//比較演算子
@@ -264,13 +272,10 @@ public:
 	//終了（消去）
 	inline void Close()
 	{
-
 		if (m_node)
 		{
-			m_node.Stop();
 			m_node.Close();
 		}
-		m_node = nullptr;
 		m_started = false;
 		flag = false;
 	}

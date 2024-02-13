@@ -46,10 +46,15 @@ CAutoAnnounce::~CAutoAnnounce()noexcept
 	{
 		m_thread2.join();
 	}
-	m_Announce1.Close();
-	m_Announce2.Close();
-	if (m_outputNode)m_outputNode.Close();
-	if (m_graph)m_graph.Close();
+	std::thread th{ [this]()
+	{
+		this->m_graph.Stop();
+		this->m_Announce1 = nullptr;
+		this->m_Announce2 = nullptr;
+		this->m_outputNode = nullptr;
+		this->m_graph = nullptr;
+	} };
+	if(th.joinable())th.detach();
 }
 
 void CAutoAnnounce::setTrainNo(int number)
