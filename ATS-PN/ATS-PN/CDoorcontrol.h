@@ -59,7 +59,8 @@ private:
 
 	winrt::Windows::Media::Audio::AudioGraph m_graph;
 	winrt::Windows::Media::Audio::AudioDeviceOutputNode m_outputNode;
-	CAudioFileInputNode m_DoorClsL, m_DoorClsR, m_DoorOpnL, m_DoorOpnR;
+	bool m_graphCreated = false, m_outputNodeCreated = false;
+	CAudioFileInputNode m_DoorClsL = nullptr, m_DoorClsR = nullptr, m_DoorOpnL = nullptr, m_DoorOpnR = nullptr;
 };
 
 

@@ -73,14 +73,19 @@ ATS_API void WINAPI atsLoad(void)
 // Called when this plug-in is unloaded
 ATS_API void WINAPI atsDispose(void)
 {
-	CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
-	CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
-	g_Ding.Close();
-	g_Ding0.Close();
-	g_Ding1.Close();
-	g_Ding2.Close();
-	if (g_outputNode)g_outputNode.Close();
-	if (g_graph)g_graph.Close();
+//	CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+//	CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+	std::thread th{ []()
+	{
+		g_graph.Stop();
+		g_Ding = nullptr;
+		g_Ding0 = nullptr;
+		g_Ding1 = nullptr;
+		g_Ding2 = nullptr;
+		g_outputNode = nullptr;
+		g_graph = nullptr;
+	} };
+	if (th.joinable())th.detach();
 }
 
 // Returns the version numbers of ATS plug-in

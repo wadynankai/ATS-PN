@@ -79,6 +79,7 @@ private:
 
 	winrt::Windows::Media::Audio::AudioGraph m_graph;
 	winrt::Windows::Media::Audio::AudioDeviceOutputNode m_outputNode;
+	bool m_graphCreated = false, m_outputNodeCreated = false;
 	CAudioFileInputNode m_Announce1 = nullptr, m_Announce2 = nullptr;
 	std::filesystem::path* m_pAnnounce1 = nullptr, * m_pAnnounce2 = nullptr;
 	std::thread m_thread1{}, m_thread2{};

@@ -47,40 +47,52 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir,
 {
 	if (graph == nullptr)
 	{
-		winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::GameMedia };
-		settings.MaxPlaybackSpeedFactor(1.0);
-		winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
-		if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+		std::thread th{ [this,&outputNode]()
 		{
-			m_graph = result.Graph();
-
-			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
+			settings.MaxPlaybackSpeedFactor(1.0);
+			winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
+			if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
 			{
-				m_outputNode = oResult.DeviceOutputNode();
+				m_graph = result.Graph();
+				m_graphCreated = true;
+	
+				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+				{
+					m_outputNode = oResult.DeviceOutputNode();
+					m_outputNodeCreated = true;
+				}
 			}
-		}
-		else if (outputNode == nullptr)
-		{
-			winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-			if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+			else if (outputNode == nullptr)
 			{
-				m_outputNode = oResult.DeviceOutputNode();
+				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+				{
+					m_outputNode = oResult.DeviceOutputNode();
+					m_outputNodeCreated = true;
+				}
 			}
-		}
-		m_graph.Start();
+			m_graph.Start();
+		} };
+		if(th.joinable())th.join();
 	}
 	loadconfig();
 }
 
 CDoorcontrol::~CDoorcontrol()
 {
-	m_DoorClsL.Close();
-	m_DoorClsR.Close();
-	m_DoorOpnL.Close();
-	m_DoorOpnR.Close();
-	if (m_outputNode)m_outputNode.Close();
-	if (m_graph)m_graph.Close();
+	std::thread th{ [this]()
+	{
+		this->m_graph.Stop();
+		this->m_DoorClsL = nullptr;
+		this->m_DoorClsR = nullptr;
+		this->m_DoorOpnL = nullptr;
+		this->m_DoorOpnR = nullptr;
+		if(this->m_outputNodeCreated) this->m_outputNode = nullptr;
+		if (this->m_graphCreated)this->m_graph = nullptr;
+	} };
+	if(th.joinable())th.detach();
 }
 
 void CDoorcontrol::setTrainNo(const int no)
