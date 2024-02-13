@@ -73,8 +73,8 @@ ATS_API void WINAPI atsLoad(void)
 // Called when this plug-in is unloaded
 ATS_API void WINAPI atsDispose(void)
 {
-//	CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
-//	CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+	CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+	CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
 	g_Ding.Close();
 	g_Ding0.Close();
 	g_Ding1.Close();
