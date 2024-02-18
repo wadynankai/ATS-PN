@@ -17,6 +17,7 @@ private:
 	bool m_white = false;//現在のカラー
 	std::vector<std::pair<size_t,size_t>> m_Train_no{};//時刻表番号のリスト(first:panel（配列）のインデックス，second:画像のインデックス）
 	size_t m_index = 0;//現在の時刻表インデックス
+	std::vector<size_t> m_atsIndex_list{};//パネルインデックスのリスト（100番，101番……等）
 public:
 	static CTrapon& GetInstance()noexcept
 	{
@@ -56,58 +57,77 @@ public:
 	void addTrainNo(size_t index,size_t dia) noexcept
 	{ 
 		std::pair<size_t, size_t> temp{ index,dia };
+		if (std::none_of(m_atsIndex_list.cbegin(), m_atsIndex_list.cend(), [&](size_t x) { return x == index; }))
+		{
+			m_atsIndex_list.emplace_back(index);
+		}
 		if (std::none_of(m_Train_no.cbegin(), m_Train_no.cend(), [&](std::pair<size_t, size_t> x) { return x == temp; }))
 		{
 			m_Train_no.emplace_back(temp);
 		}
 	}
-	_NODISCARD const std::pair<size_t,size_t> getTimeTable() const noexcept
+	_NODISCARD const std::vector<size_t>& getAtsIndexList()const noexcept
+	{
+		return m_atsIndex_list;
+	}
+	_NODISCARD const size_t& getAtsIndexList(size_t index)const noexcept
+	{
+		return m_atsIndex_list.at(index);
+	}
+	_NODISCARD const size_t getTimeTable(size_t atsIndex) const noexcept
 	{
 		if (!m_power)//トラポンの電源が切れているとき
 		{
-			return { 100,0 };//透明画像
+			return 0;//透明画像
 
 		}
 		else [[likely]]
 		{
 			if (!m_IcCard || m_Train_no.empty())//ICカードが差さっていないとき
 			{
-				if (!m_white)
+				if (atsIndex == 100)
 				{
-					return { 100,1 };
+					if (!m_white)
+					{
+
+						return 1;
+					}
+					else
+					{
+						return 2;
+					}
 				}
-				else
-				{
-					return { 100,2 };
-				}
+				else return 0;
 			}
 			else [[likely]]//ICカードが差さっているとき
 			{
-
-				switch (m_Train_no.at(m_index).first)
+				if (m_Train_no.at(m_index).first == atsIndex)
 				{
-				case 100:
-					if (!m_white)
+					switch (m_Train_no.at(m_index).first)
 					{
-						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second + 1 };
+					case 100:
+						if (!m_white)
+						{
+							return 2 * m_Train_no.at(m_index).second + 1;
+						}
+						else
+						{
+							return 2 * m_Train_no.at(m_index).second + 2;
+						}
+						break;
+					default:
+						if (!m_white)
+						{
+							return 2 * m_Train_no.at(m_index).second - 1;
+						}
+						else
+						{
+							return 2 * m_Train_no.at(m_index).second;
+						}
+						break;
 					}
-					else
-					{
-						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second + 2 };
-					}
-					break;
-				default:
-					if (!m_white)
-					{
-						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second - 1 };
-					}
-					else
-					{
-						return { m_Train_no.at(m_index).first,2 * m_Train_no.at(m_index).second };
-					}
-					break;
 				}
-
+				else return 0;
 			}
 		}
 	}

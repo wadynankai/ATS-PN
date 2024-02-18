@@ -9,6 +9,14 @@
 #include "..\..\common\LoadBveText.h"
 #include "..\..\common\CAudioFileInputNode.h"
 
+#ifdef EXCEPTION
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN             // Windows ヘッダーからほとんど使用されていない部分を除外する
+#endif
+#include <windows.h>
+#include <source_location>
+#endif // EXCEPTION
+
 namespace dep_distance
 {
 	constexpr double commuter = 50.0;//通勤者出発後のアナウンスは50m走行後に鳴らす。
@@ -92,12 +100,15 @@ private:
 
 inline void CAutoAnnounce::Running(const double& loc)
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	static int time_pre = 0;//前フレームの時刻
 	m_Location = loc;//現在の位置
 //	m_RunDistance = m_Location - m_LocationOrigin;//出発してからの距離
 	if (!m_first_time)
 	{
-		if (m_Announce1.flag && m_pAnnounce1 && !m_thread2.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce1.flag && m_pAnnounce1/* && !m_thread2.joinable()*/)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread1.joinable())
 			{
@@ -110,7 +121,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				});//放送を登録
 			m_Announce1.flag = false;
 		}
-		if (m_Announce2.flag && m_pAnnounce2 && !m_thread1.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce2.flag && m_pAnnounce2/* && !m_thread1.joinable()*/)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread2.joinable())
 			{
@@ -166,6 +177,20 @@ inline void CAutoAnnounce::Running(const double& loc)
 
 	m_Location_pre = m_Location;
 	//	m_RunDistance_pre = m_RunDistance;
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 
@@ -177,6 +202,9 @@ inline void CAutoAnnounce::Halt(const int no) noexcept
 
 inline void CAutoAnnounce::DoorCls(void) noexcept
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	//	m_LocationOrigin = m_Location;//駅発車時の位置を登録（出発後の放送に使用）
 	if (m_set_no)//始発駅以外
 	{
@@ -190,7 +218,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				}
 				else
 				{
-					m_Announce1.Close();//前の放送を消去
+					m_Announce1 = nullptr;//前の放送を消去
 				}
 				if (!a.name2.empty())
 				{
@@ -199,7 +227,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 				}
 				else
 				{
-					m_Announce2.Close();//前の放送を消去
+					m_Announce2 = nullptr;//前の放送を消去
 				}
 				switch (a.mode)//出発後放送の位置を登録
 				{
@@ -254,6 +282,20 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 		}
 		m_A_Loc2 = m_first.location2;//到着前放送の位置を登録
 	}
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 

@@ -9,38 +9,73 @@ CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, int& DelT,
 	m_module_dir(moduleDir),
 	m_table_dir(moduleDir / L"announce\\")
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	if (graph == nullptr)
 	{
-		std::thread th{ [this,&outputNode]()
+		std::thread th{ [&]()
 		{
-			winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
-			settings.MaxPlaybackSpeedFactor(1.0);
-			winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
-			if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+			try
 			{
-				m_graph = result.Graph();
-				m_graphCreated = true;
-
-				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+				winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
+				settings.MaxPlaybackSpeedFactor(1.0);
+				winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
+				if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
 				{
-					m_outputNode = oResult.DeviceOutputNode();
-					m_outputNodeCreated = true;
+					m_graph = result.Graph();
+					m_graphCreated = true;
+	
+					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+					{
+						m_outputNode = oResult.DeviceOutputNode();
+						m_outputNodeCreated = true;
+					}
 				}
-			}
-			else if (outputNode == nullptr)
-			{
-				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+				else if (outputNode == nullptr)
 				{
-					m_outputNode = oResult.DeviceOutputNode();
-					m_outputNodeCreated = true;
+					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+					{
+						m_outputNode = oResult.DeviceOutputNode();
+						m_outputNodeCreated = true;
+					}
 				}
-			}
-			m_graph.Start();
+				m_graph.Start();
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1,ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#else
+			catch (...) {}
+#endif
 		} };
 		if(th.joinable())th.join();
 	}
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 CAutoAnnounce::~CAutoAnnounce()noexcept
@@ -53,19 +88,28 @@ CAutoAnnounce::~CAutoAnnounce()noexcept
 	{
 		m_thread2.join();
 	}
-	std::thread th{ [this]()
+	std::thread th{ [&]()
 	{
-		this->m_graph.Stop();
-		this->m_Announce1 = nullptr;
-		this->m_Announce2 = nullptr;
-		if (this->m_outputNodeCreated) this->m_outputNode = nullptr;
-		if (this->m_graphCreated)this->m_graph = nullptr;
+		m_graph.Stop();
+		m_Announce1=nullptr;
+		m_Announce2=nullptr;
+		if (m_outputNodeCreated)
+		{
+			if (m_outputNode)m_outputNode=nullptr;
+		}
+		if (m_graphCreated)
+		{
+			if (m_graph)m_graph=nullptr;
+		}
 	} };
-	if(th.joinable())th.detach();
+	if(th.joinable())th.join();
 }
 
 void CAutoAnnounce::setTrainNo(int number)
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	m_trainNo = number;
 	m_first = AnnounceSet{};
 	m_A_Set.clear();
@@ -157,6 +201,20 @@ void CAutoAnnounce::setTrainNo(int number)
 //		ofs.close();
 	}
 	m_A_Set.shrink_to_fit();
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 

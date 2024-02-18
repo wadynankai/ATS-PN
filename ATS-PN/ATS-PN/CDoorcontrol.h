@@ -3,8 +3,17 @@
 
 #include <filesystem>
 #include <fstream>
+#include <thread>
 #include "..\..\common\LoadBveText.h"
 #include "..\..\common\CAudioFileInputNode.h"
+
+#ifdef EXCEPTION
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN             // Windows ヘッダーからほとんど使用されていない部分を除外する
+#endif
+#include <windows.h>
+#include <source_location>
+#endif // EXCEPTION
 
 namespace DoorTimer
 {
@@ -66,6 +75,9 @@ private:
 
 inline void CDoorcontrol::Running(const int time) noexcept
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	static int time_pre = 0, deltaT = 0;
 	deltaT = time - time_pre;
 	if (deltaT < 0 || deltaT >= 1000)deltaT = 0;//駅に移動対策
@@ -127,6 +139,20 @@ inline void CDoorcontrol::Running(const int time) noexcept
 	}
 	m_OpenTime_pre = m_OpenTime;
 	time_pre = time;
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 inline void CDoorcontrol::Halt(const int staNo)noexcept
@@ -168,6 +194,9 @@ inline void CDoorcontrol::DoorCls(void)noexcept
 
 inline void CDoorcontrol::NambaDoorOpn(void)noexcept
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	if (m_nambaF && !m_pilotLamp && m_pilotLampR && (m_nambaTrack == 2 || m_nambaTrack == 4 || m_nambaTrack == 6 || m_nambaTrack == 8))//難波偶数番線
 	{
 		if (m_DoorOpnR)m_DoorOpnR.Start();
@@ -180,6 +209,20 @@ inline void CDoorcontrol::NambaDoorOpn(void)noexcept
 		doorUmi = 2;
 		m_pilotLampL = false;
 	}
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 

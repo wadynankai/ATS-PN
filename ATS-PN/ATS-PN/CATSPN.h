@@ -4,7 +4,6 @@
 #include <limits>
 #include <vector>
 #include <filesystem>
-#include <optional>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10

@@ -1,8 +1,7 @@
-#ifndef CAUDIOFILEINPUTNODE_INCLUDED
-#define CAUDIOFILEINPUTNODE_INCLUDED
+#ifndef _CAUDIOFILEINPUTNODE_INCLUDED_
+#define _CAUDIOFILEINPUTNODE_INCLUDED_
 #include <filesystem>
-#include <chrono>
-#include <thread>
+#include <fstream>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT//最新バージョンのWindows
@@ -10,9 +9,13 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+
+#ifndef WINRT_LEAN_AND_MEAN
+#define WINRT_LEAN_AND_MEAN
+#endif
+
 #include <sdkddkver.h>
-#include <optional>
-#include <fstream>
+#include <winrt\base.h>
 #include <winrt\windows.foundation.h>
 #include <winrt\windows.media.audio.h>
 #include <winrt\windows.storage.h>
@@ -51,25 +54,21 @@ public:
 	CAudioFileInputNode(
 		const winrt::Windows::Media::Audio::AudioGraph& graph, //AudioGraphオブジェクトへの参照
 		const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode,//OutputNodeへの参照
-		std::wfilebuf* pBuf,//初期化ログファイルへのポインタ
+		std::wofstream& ofs,//初期化ログファイルへのポインタ
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		winrt::Windows::Foundation::IReference<int32_t> LoopCount = nullptr//ループカウント（1回の場合は0，2回の場合は1，…，nullptrは無限ループ
 	)
-		: CAudioFileInputNode(graph, outputNode, nullptr, pBuf, name, LoopCount) {}
+		: CAudioFileInputNode(graph, outputNode, nullptr, ofs.rdbuf(), name, LoopCount) {}
 	//コンストラクタ
 	CAudioFileInputNode(
 		const winrt::Windows::Media::Audio::AudioGraph& graph, //AudioGraphオブジェクトへの参照
 		const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode,//OutputNodeへの参照
 		winrt::hresult* pHr,//エラー番号
-		std::wfilebuf* pBuf,//初期化ログファイルへのポインタ
+		std::wofstream& ofs,//初期化ログファイルへのポインタ
 		const std::filesystem::path& name,//音声ファイルのファイル名
 		winrt::Windows::Foundation::IReference<int32_t> LoopCount = nullptr//ループカウント（1回の場合は0，2回の場合は1，…，nullptrは無限ループ
 	)
-		:m_node(nullptr), m_started(false), flag(false)
-	{
-		winrt::hresult hr = CreateAudioFileInputNode(name, graph, outputNode, LoopCount, pBuf);
-		if (pHr)*pHr = hr;
-	}
+		: CAudioFileInputNode(graph, outputNode, pHr, ofs.rdbuf(), name, LoopCount) {}
 
 	//デストラクタ
 	~CAudioFileInputNode() = default;
@@ -87,6 +86,7 @@ public:
 	//nullptrの代入
 	inline CAudioFileInputNode& operator=(nullptr_t p)noexcept
 	{
+		if(m_node)m_node.Stop();
 		m_node = nullptr;
 		m_started = false;
 		flag = false;
@@ -270,20 +270,35 @@ public:
 		if(m_node)m_node.Start();
 	}
 	//終了（消去）
-	inline void Close()
-	{
-		if (m_node)
-		{
-			m_node.Close();
-		}
-		m_started = false;
-		flag = false;
-	}
+//	inline void Close()//例外発生のもとになるので使用しない！！
+//	{
+//		if (m_node)
+//		{
+//			m_node.Close();
+//		}
+//		m_started = false;
+//		flag = false;
+//	}
 	//trueの時に開始するなど（外部から自由に使う）
 	bool flag;
 
 
 private:
+	//コンストラクタ
+	CAudioFileInputNode(
+		const winrt::Windows::Media::Audio::AudioGraph& graph, //AudioGraphオブジェクトへの参照
+		const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode,//OutputNodeへの参照
+		winrt::hresult* pHr,//エラー番号
+		std::wfilebuf* pBuf,//初期化ログファイルへのポインタ
+		const std::filesystem::path& name,//音声ファイルのファイル名
+		winrt::Windows::Foundation::IReference<int32_t> LoopCount = nullptr//ループカウント（1回の場合は0，2回の場合は1，…，nullptrは無限ループ
+	)
+		:m_node(nullptr), m_started(false), flag(false)
+	{
+		winrt::hresult hr = CreateAudioFileInputNode(name, graph, outputNode, LoopCount, pBuf);
+		if (pHr)*pHr = hr;
+	}
+
 	winrt::Windows::Media::Audio::AudioFileInputNode m_node;
 	bool m_started;
 	winrt::hresult CreateAudioFileInputNode(
@@ -292,30 +307,41 @@ private:
 		const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode,
 		const winrt::Windows::Foundation::IReference<int32_t>& LoopCount = nullptr,
 		std::wfilebuf* pBuf = nullptr//初期化ログファイルへのポインタ
-	)
+	)noexcept
 	{
-
-		std::filesystem::path name_normal(name.lexically_normal());
 		winrt::Windows::Storage::StorageFile storageFile = nullptr;
 		winrt::Windows::Media::Audio::CreateAudioFileInputNodeResult fResult = nullptr;
-		if (!std::filesystem::exists(name_normal))//ファイルが存在しない場合
-		{
-			if (pBuf)
+
+
+		std::thread th{ [&] ()
 			{
-				if (pBuf->is_open())
-				{
-					std::basic_ostream ostr(pBuf);
-					ostr << L"ファイル：" << name_normal << L"は存在しません。スキップします。" << std::endl;
-				}
-			}
-		}
-		else
-		{
-			std::thread th{ [&name,&graph,&outputNode,pBuf,&LoopCount,this,&name_normal,&storageFile,&fResult]() {
 			try
 			{
+				std::filesystem::path name_normal(name.lexically_normal());
 				storageFile = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(name_normal.wstring()).get();
 				fResult = graph.CreateFileInputNodeAsync(storageFile).get();
+				if (fResult.Status() == winrt::Windows::Media::Audio::AudioFileNodeCreationStatus::Success)//作成成功
+				{
+					fResult.FileInputNode().Stop();
+					fResult.FileInputNode().AddOutgoingConnection(outputNode);
+					fResult.FileInputNode().LoopCount(LoopCount);
+					if (pBuf)
+					{
+						if (pBuf->is_open())
+						{
+							std::basic_ostream ostr(pBuf);
+							ostr << L"AudioFileInputNodeの作成成功" << std::endl;
+							ostr << L"ファイル名：" << std::endl;
+							ostr << name_normal.c_str() << std::endl;
+						}
+					}
+					m_node = fResult.FileInputNode();
+					if (LoopCount == nullptr)//ループ再生時
+					{
+						Start();
+						OutgoingGain(0.0);
+					}
+				}
 			}
 			catch (const std::exception& ex)
 			{
@@ -325,36 +351,27 @@ private:
 					{
 						std::basic_ostream ostr(pBuf);
 						ostr << L"DeviceOutputNode作成失敗" << std::endl;
-						ostr << L"エラー: " << std::hex << fResult.ExtendedError().value << std::endl;
+						if (fResult)ostr << L"エラー: " << std::hex << fResult.ExtendedError().value << std::endl;
 						ostr << ex.what() << std::endl;
 					}
 				}
 			}
-			if (fResult.Status() == winrt::Windows::Media::Audio::AudioFileNodeCreationStatus::Success)//作成成功
+			catch (const winrt::hresult_error& hr)
 			{
-				fResult.FileInputNode().Stop();
-				fResult.FileInputNode().AddOutgoingConnection(outputNode);
-				fResult.FileInputNode().LoopCount(LoopCount);
 				if (pBuf)
 				{
 					if (pBuf->is_open())
 					{
 						std::basic_ostream ostr(pBuf);
-						ostr << L"AudioFileInputNodeの作成成功" << std::endl;
-						ostr << L"ファイル名：" << std::endl;
-						ostr << name_normal.c_str() << std::endl;
+						ostr << L"AudioFileInputNode作成失敗" << std::endl;
+						if (fResult)	ostr << L"エラー: " << std::hex << fResult.ExtendedError().value << std::endl;
+						ostr << std::hex << hr.message().c_str() << std::endl;
 					}
 				}
-				m_node = fResult.FileInputNode();
-				if (LoopCount == nullptr)//ループ再生時
-				{
-					this->Start();
-					this->OutgoingGain(0.0);
-				}
 			}
-			} };
-			if (th.joinable())th.join();
 		}
+	};
+	if (th.joinable())th.join();
 		if (fResult) return fResult.ExtendedError();
 		else return winrt::hresult(0x80004005L);//E_FAIL
 	}
@@ -362,4 +379,4 @@ private:
 };
 
 
-#endif // !CAUDIOFILEINPUTNODE_INCLUDED
+#endif // !_CAUDIOFILEINPUTNODE_INCLUDED_

@@ -24,6 +24,10 @@
 #include "..\..\common\CAtsSound.h"
 #include "..\..\common\CAudioFileInputNode.h"
 
+#ifdef EXCEPTION
+#include <source_location>
+#endif // EXCEPTION
+
 
 
 

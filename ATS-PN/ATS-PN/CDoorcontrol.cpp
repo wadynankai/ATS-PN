@@ -2,6 +2,9 @@
 
 inline void CDoorcontrol::loadconfig(void)
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	std::filesystem::path DoorClsL_name;
 	std::filesystem::path DoorClsR_name;
 	std::filesystem::path DoorOpnL_name;
@@ -31,6 +34,20 @@ inline void CDoorcontrol::loadconfig(void)
 	m_DoorClsR = CAudioFileInputNode(m_graph, m_outputNode, DoorClsR_name, 0);
 	m_DoorOpnL = CAudioFileInputNode(m_graph, m_outputNode, DoorOpnL_name, 0);
 	m_DoorOpnR = CAudioFileInputNode(m_graph, m_outputNode, DoorOpnR_name, 0);
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir,
@@ -45,58 +62,103 @@ CDoorcontrol::CDoorcontrol(const std::filesystem::path& moduleDir,
 	m_OpenTime(0), m_OpenTime_pre(0),
 	m_sanoF(false), m_sanoTrack(0)
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	if (graph == nullptr)
 	{
-		std::thread th{ [this,&outputNode]()
+		std::thread th{ [&]()
 		{
-			winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
-			settings.MaxPlaybackSpeedFactor(1.0);
-			winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
-			if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+			try
 			{
-				m_graph = result.Graph();
-				m_graphCreated = true;
+				winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
+				settings.MaxPlaybackSpeedFactor(1.0);
+				winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
+				if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
+				{
+					m_graph = result.Graph();
+					m_graphCreated = true;
 	
-				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
-				{
-					m_outputNode = oResult.DeviceOutputNode();
-					m_outputNodeCreated = true;
+					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+					{
+						m_outputNode = oResult.DeviceOutputNode();
+						m_outputNodeCreated = true;
+					}
 				}
-			}
-			else if (outputNode == nullptr)
-			{
-				winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-				if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+				else if (outputNode == nullptr)
 				{
-					m_outputNode = oResult.DeviceOutputNode();
-					m_outputNodeCreated = true;
+					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
+					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
+					{
+						m_outputNode = oResult.DeviceOutputNode();
+						m_outputNodeCreated = true;
+					}
 				}
-			}
 			m_graph.Start();
+			
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1,ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#else
+			catch(...){}
+#endif
 		} };
 		if(th.joinable())th.join();
 	}
 	loadconfig();
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 CDoorcontrol::~CDoorcontrol()
 {
-	std::thread th{ [this]()
+	std::thread th{ [&]()
 	{
-		this->m_graph.Stop();
-		this->m_DoorClsL = nullptr;
-		this->m_DoorClsR = nullptr;
-		this->m_DoorOpnL = nullptr;
-		this->m_DoorOpnR = nullptr;
-		if(this->m_outputNodeCreated) this->m_outputNode = nullptr;
-		if (this->m_graphCreated)this->m_graph = nullptr;
+		m_graph.Stop();
+		m_DoorClsL=nullptr;
+		m_DoorClsR=nullptr;
+		m_DoorOpnL=nullptr;
+		m_DoorOpnR=nullptr;
+		if (m_outputNodeCreated)
+		{
+			if(m_outputNode)m_outputNode=nullptr;
+		}
+		if (m_graphCreated)
+		{
+			if (m_graph)m_graph=nullptr;
+		}
 	} };
-	if(th.joinable())th.detach();
+	if(th.joinable())th.join();
 }
 
 void CDoorcontrol::setTrainNo(const int no)
 {
+#ifdef EXCEPTION
+	try {
+#endif // EXCEPTION
 	m_trainNo = no;
 	std::wifstream table(m_tableFileName);
 	table.imbue(std::locale(".UTF-8"));
@@ -121,6 +183,20 @@ void CDoorcontrol::setTrainNo(const int no)
 		}
 	}
 	table.close();
+#ifdef EXCEPTION
+	}
+	catch (std::exception& ex)
+	{
+		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
+	}
+	catch (winrt::hresult_error& hr)
+	{
+		std::wstringstream ss1, ss2;
+		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
+		ss2 << std::source_location::current().function_name();
+		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
+	}
+#endif // EXCEPTION
 }
 
 
