@@ -1,82 +1,11 @@
 #include "CAutoAnnounce.h"
-CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, int& DelT,
-	const winrt::Windows::Media::Audio::AudioGraph& graph, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode):
+CAutoAnnounce::CAutoAnnounce(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, std::chrono::milliseconds& DelT) :
 	m_DelT(DelT),//1フレームの時間
-	m_graph(graph),
-	m_outputNode(outputNode),
+	m_pXAudio2(pXau2),
 	m_Announce1(nullptr),
 	m_Announce2(nullptr),
 	m_module_dir(moduleDir),
-	m_table_dir(moduleDir / L"announce\\")
-{
-#ifdef EXCEPTION
-	try {
-#endif // EXCEPTION
-	if (graph == nullptr)
-	{
-		std::thread th{ [&]()
-		{
-			try
-			{
-				winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
-				settings.MaxPlaybackSpeedFactor(1.0);
-				winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
-				if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
-				{
-					m_graph = result.Graph();
-					m_graphCreated = true;
-	
-					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
-					{
-						m_outputNode = oResult.DeviceOutputNode();
-						m_outputNodeCreated = true;
-					}
-				}
-				else if (outputNode == nullptr)
-				{
-					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = m_graph.CreateDeviceOutputNodeAsync().get();
-					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
-					{
-						m_outputNode = oResult.DeviceOutputNode();
-						m_outputNodeCreated = true;
-					}
-				}
-				m_graph.Start();
-#ifdef EXCEPTION
-	}
-	catch (std::exception& ex)
-	{
-		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
-	}
-	catch (winrt::hresult_error& hr)
-	{
-		std::wstringstream ss1,ss2;
-		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
-		ss2 << std::source_location::current().function_name();
-		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
-	}
-#else
-			catch (...) {}
-#endif
-		} };
-		if(th.joinable())th.join();
-	}
-#ifdef EXCEPTION
-	}
-	catch (std::exception& ex)
-	{
-		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
-	}
-	catch (winrt::hresult_error& hr)
-	{
-		std::wstringstream ss1, ss2;
-		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
-		ss2 << std::source_location::current().function_name();
-		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
-	}
-#endif // EXCEPTION
-}
+	m_table_dir(moduleDir / L"announce\\"){}
 
 CAutoAnnounce::~CAutoAnnounce()noexcept
 {
@@ -88,21 +17,8 @@ CAutoAnnounce::~CAutoAnnounce()noexcept
 	{
 		m_thread2.join();
 	}
-	std::thread th{ [&]()
-	{
-		m_graph.Stop();
-		m_Announce1=nullptr;
-		m_Announce2=nullptr;
-		if (m_outputNodeCreated)
-		{
-			if (m_outputNode)m_outputNode=nullptr;
-		}
-		if (m_graphCreated)
-		{
-			if (m_graph)m_graph=nullptr;
-		}
-	} };
-	if(th.joinable())th.join();
+	m_Announce1 = nullptr;
+	m_Announce2 = nullptr;
 }
 
 void CAutoAnnounce::setTrainNo(int number)

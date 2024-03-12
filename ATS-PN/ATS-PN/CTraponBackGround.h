@@ -1,5 +1,8 @@
 #include <algorithm>
 #include <vector>
+
+using namespace std::literals::chrono_literals;
+
 class CTrapon
 {
 private:
@@ -8,8 +11,8 @@ private:
 	CTrapon& operator=(CTrapon&&) = delete;
 	~CTrapon()noexcept = default;
 	int m_transitionCount = 1;//変化のコマ数
-	int m_transitionTime = 1;//1コマ変化時間
-	int m_timer = 0;
+	std::chrono::milliseconds m_transitionTime = 1ms;//1コマ変化時間
+	std::chrono::milliseconds m_timer = 0ms;
 	int m_count = 1;
 	bool m_power = false;//トラポン電源
 	bool m_IcCard = false;//ICカード状態
@@ -27,7 +30,7 @@ public:
 	void setTransitionCount(int count)noexcept
 	{
 		m_transitionCount = count;
-		m_transitionTime = 500 / count;
+		m_transitionTime = 500ms / count;
 		m_Train_no.clear();
 		m_power = false;
 	}
@@ -148,7 +151,7 @@ public:
 	}
 	_NODISCARD const bool getColor()const noexcept { return m_white; }
 	_NODISCARD const bool getPower()const noexcept { return m_power; }
-	_NODISCARD const int getBackGround(const int deltaT)noexcept
+	_NODISCARD const int getBackGround(const std::chrono::milliseconds& deltaT)noexcept
 	{
 		if (!m_power)//電源切
 		{
@@ -164,7 +167,7 @@ public:
 				m_timer += deltaT;
 				if (m_timer >= m_transitionTime)//めくる場合
 				{
-					int no = (m_timer / m_transitionTime);
+					int no = static_cast<int>(m_timer / m_transitionTime);
 					m_count += no;
 					if (m_count > 2 * m_transitionCount)
 					{
@@ -179,7 +182,7 @@ public:
 				m_timer += deltaT;
 				if (m_timer >= m_transitionTime)//めくる場合
 				{
-					int no = (m_timer / m_transitionTime);
+					int no = static_cast<int>(m_timer / m_transitionTime);
 					m_count += no;
 					if (m_count >= m_transitionCount + 1)
 					{
@@ -189,7 +192,7 @@ public:
 					m_timer -= no * m_transitionTime;
 				}
 			}
-			else [[likely]] m_timer = 0;//変化していないとき
+			else [[likely]] m_timer = 0ms;//変化していないとき
 		}
 		return m_count;
 	}

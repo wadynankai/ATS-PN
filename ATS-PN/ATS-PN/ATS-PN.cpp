@@ -4,58 +4,32 @@
 // Called when this plug-in is loaded
 ATS_API void WINAPI atsLoad(void)
 {
-#ifdef EXCEPTION
-	try {
-#endif // EXCEPTION
-
 		if (!CATSPN::GetInstance())CATSPN::CreateInstance(g_module_dir, g_TrainSpeed, g_deltaT, g_deltaL, g_Brake);
 
-	//https://github.com/stenobot/TinyTimer/blob/master/TinyTimer/DataModel/SoundPlayer.cs
-		std::thread th{ [&]()
+		if (HRESULT hr; SUCCEEDED(hr = XAudio2Create(pXAudio2.put(), 0, XAUDIO2_DEFAULT_PROCESSOR)))//XAudio2初期化
 		{
-			try
-			{
-				winrt::Windows::Media::Audio::AudioGraphSettings settings{ winrt::Windows::Media::Render::AudioRenderCategory::Media };
-				settings.DesiredRenderDeviceAudioProcessing(winrt::Windows::Media::AudioProcessing::Raw);
-				settings.QuantumSizeSelectionMode(winrt::Windows::Media::Audio::QuantumSizeSelectionMode::LowestLatency);
-				winrt::Windows::Media::Audio::CreateAudioGraphResult result = winrt::Windows::Media::Audio::AudioGraph::CreateAsync(settings).get();
-				if (result.Status() == winrt::Windows::Media::Audio::AudioGraphCreationStatus::Success)
-				{
-					g_graph = result.Graph();
-
-					winrt::Windows::Media::Audio::CreateAudioDeviceOutputNodeResult oResult = g_graph.CreateDeviceOutputNodeAsync().get();
-					if (oResult.Status() == winrt::Windows::Media::Audio::AudioDeviceNodeCreationStatus::Success)
-					{
-						g_outputNode = oResult.DeviceOutputNode();
-					}
-
-
-					g_Ding = CAudioFileInputNode(g_graph, g_outputNode, g_module_dir / L"atsDing.wav", 0);
-					g_Ding0 = CAudioFileInputNode(g_graph, g_outputNode, g_module_dir / L"atsDing0.wav", 0);
-					g_Ding1 = CAudioFileInputNode(g_graph, g_outputNode, g_module_dir / L"atsDing1.wav", 0);
-					g_Ding2 = CAudioFileInputNode(g_graph, g_outputNode, g_module_dir / L"atsDing2.wav", 0);
-					g_graph.Start();
-				}
-#ifdef EXCEPTION
-			}
-			catch (std::exception& ex)
-			{
-				MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
-			}
-			catch (winrt::hresult_error& hr)
-			{
-				std::wstringstream ss1, ss2;
-				ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
-				ss2 << std::source_location::current().function_name();
-				MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
-			}
+#if(_WIN32_WINNT>=_WIN32_WINNT_WIN8)
+			if (SUCCEEDED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, XAUDIO2_DEFAULT_SAMPLERATE, 0, nullptr, nullptr, AudioCategory_GameEffects)))
 #else
+			if (SUCCEEDED(hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice)))//MasteringVoice作成失敗
+#endif // !BVE_XAudio2_WIN7
+			{
+				bool mfStarted = false;//メディアファンデーションプラットフォームが初期化出来たらTRUEにする。
+				hr = MFStartup(MF_VERSION);// メディアファンデーションプラットフォームの初期化
+				mfStarted = SUCCEEDED(hr);//初期化出来たらTRUEにする。
+				g_Ding.reset(pXAudio2, g_module_dir / L"atsDing.wav", XAUDIO2_LOOP_INFINITE, XAUDIO2_VOICE_NOPITCH);
+				g_Ding1.reset(pXAudio2, g_module_dir / L"atsDing1.wav", 0U, XAUDIO2_VOICE_NOPITCH);
+				g_Ding2.reset(pXAudio2, g_module_dir / L"atsDing2.wav", 0U, XAUDIO2_VOICE_NOPITCH);
+
+				if (mfStarted)MFShutdown();// メディアファンデーションプラットフォームが初期化されていたら終了
+
+				g_Ding.setPlayLength(0, 0, 0, std::chrono::duration_cast<winrt::Windows::Foundation::TimeSpan>(42ms), XAUDIO2_LOOP_INFINITE);
+				g_Ding->Stop();
+				g_Ding->SetVolume(1.0);
+				g_Ding1->SetVolume(1.0);
+				g_Ding2->SetVolume(1.0);
 			}
-			catch(...)
-			{ }
-#endif //!EXCEPTION
-		} 
-		};
+		}
 
 
 	std::filesystem::path TraponConfig(g_module_dir / "TraponConfig.txt");
@@ -81,67 +55,20 @@ ATS_API void WINAPI atsLoad(void)
 	g_delete_push = false;
 	g_PgUp_push = false;
 	g_PgDn_push = false;
-
-	if(th.joinable()) th.join();
-#ifdef EXCEPTION
-	}
-	catch (std::exception& ex)
-	{
-		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
-	}
-	catch (winrt::hresult_error& hr)
-	{
-		std::wstringstream ss1, ss2;
-		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
-		ss2 << std::source_location::current().function_name();
-		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
-	}
-#endif // EXCEPTION
 }
 
 // Called when this plug-in is unloaded
 ATS_API void WINAPI atsDispose(void)
 {
-#ifdef EXCEPTION
-	try {
-#endif // EXCEPTION
-	std::thread th1{ []() 
-		{
-			CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
-		}
-	};
-	std::thread th2{ []()
-		{
-			CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
-		}
-	};
-	std::thread th{ [&]()
-	{
-		g_graph.Stop();
+		CDoorcontrol::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+
+		CAutoAnnounce::GetInstance().reset();//dllの場合，デストラクタに解放処理を任せられない？
+
+
 		g_Ding = nullptr;
-		g_Ding0 = nullptr;
 		g_Ding1 = nullptr;
 		g_Ding2 = nullptr;
-		g_outputNode = nullptr;
-		g_graph = nullptr;
-	} };
-	if (th.joinable())th.join();
-	if (th1.joinable())th1.join();
-	if (th2.joinable())th2.join();
-#ifdef EXCEPTION
-	}
-	catch (std::exception& ex)
-	{
-		MessageBoxA(nullptr, ex.what(), std::source_location::current().function_name(), MB_OK);
-	}
-	catch (winrt::hresult_error& hr)
-	{
-		std::wstringstream ss1, ss2;
-		ss1 << L"エラーコード：" << std::hex << hr.code() << L"\n" << hr.message().c_str();
-		ss2 << std::source_location::current().function_name();
-		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
-	}
-#endif // EXCEPTION
+		pXAudio2 = nullptr;
 }
 
 // Returns the version numbers of ATS plug-in
@@ -208,23 +135,25 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 
 
 		static bool l_pause = false;//trueのときに音を止める（ローカル変数）
-		if (l_pause && g_graph)g_graph.Start(), l_pause = false;
+		if (l_pause && pXAudio2)pXAudio2->StartEngine(), l_pause = false;
 		if (GetKeyState('P') & 0x80)l_pause = true;
+		std::chrono::time_point<std::chrono::milliseconds>time{ std::chrono::milliseconds(vehicleState.Time) };
 
-		g_deltaT = vehicleState.Time - g_time;
-		g_time = vehicleState.Time;
+
+		g_deltaT = time - g_time;
+		g_time = time;
 		g_deltaL = vehicleState.Location - g_location;
 		g_location = vehicleState.Location;
 		g_TrainSpeed = vehicleState.Speed;
 
 		if (CATSPN::GetInstance())CATSPN::GetInstance()->RunPNcontrol();//PN制御実行
 		g_AstTimer += g_deltaT;
-		if (g_AstTimer >= 1000)
+		if (g_AstTimer >= 1000ms)
 		{
 			g_Aster = !g_Aster;
-			g_AstTimer %= 1000;
+			g_AstTimer %= 1000ms;
 		}
-		else if (g_AstTimer < 0)g_AstTimer = 0;
+		else if (g_AstTimer < 0ms)g_AstTimer = 0ms;
 
 
 		panel[99] = CTrapon::GetInstance().getBackGround(g_deltaT);//トラポン背景出力
@@ -287,7 +216,7 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 				}
 			if (CDoorcontrol::GetInstance())
 			{
-				CDoorcontrol::GetInstance()->Running(vehicleState.Time);
+				CDoorcontrol::GetInstance()->Running(time);
 				panel[217] = CDoorcontrol::GetInstance()->doorYama;
 				panel[218] = CDoorcontrol::GetInstance()->doorUmi;
 			}
@@ -319,25 +248,29 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 				{
 					g_belltimer += g_deltaT;
 				}
-				if (g_belltimer > 1500)
+				if (g_belltimer > 1500ms)
 				{
 					if (g_Ding1.flag)
 					{
-						g_Ding1.Start();
+						g_Ding1->Start();
 						g_Ding1.flag = false;
 					}
 					else if (g_Ding2.flag)
 					{
-						g_Ding2.Start();
+						g_Ding2->Start();
 						g_Ding2.flag = false;
 					}
 				}
+			}
+			if (CDoorcontrol::GetInstance())
+			{
+				if (CDoorcontrol::GetInstance()->getShashouBell())g_Ding1->Start();
 			}
 
 
 			if (l_pause)//ポーズのとき
 			{
-				if (g_graph)g_graph.Stop();
+				if (pXAudio2)pXAudio2->StopEngine();
 			}
 #ifdef EXCEPTION
 	}
@@ -436,30 +369,34 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 	case ATS_KEY_S:
 		if (!g_Space)
 		{
-//			g_Ding->Stop();
-//			g_Ding.reSubmitSourceBuffer();
-//			g_Ding->Start();
-			g_Ding0.LoopCount(nullptr);
-			g_Ding0.StartTime(nullptr);
-			g_Ding0.EndTime(dingDuration);
-			g_Ding0.Reset();
-			g_Ding0.Start();
-			g_Space = true;
-			g_belltimer = 0;
+			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			{
+				g_Ding->Stop();
+				g_Ding.reSubmitSourceBuffer();
+				g_Ding->Start();
+				g_Space = true;
+				g_belltimer = 0ms;
+				if (CDoorcontrol::GetInstance())
+				{
+					CDoorcontrol::GetInstance()->untenshiBell();
+				}
+			}
 		}
 		break;
 	case ATS_KEY_A1:
 		if (!g_insert_push)
 		{
-			if ((GetKeyState(VK_SHIFT) & 0x80)&& !(GetKeyState(VK_CONTROL) & 0x80))
+
+			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			{
+				CTrapon::GetInstance().changeColor();
+				g_trapon_push.Start();
+			}
+			else if ((GetKeyState(VK_SHIFT) & 0x80)&& !(GetKeyState(VK_CONTROL) & 0x80))
 			{
 				bool power = CTrapon::GetInstance().powerButton();
 				if (power)g_trapon_on.Start();
 				else g_trapon_off.Start();
-			}
-			else [[likely]]
-			{
-				if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorOpn();
 			}
 			g_insert_push = true;
 		}
@@ -467,15 +404,14 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 	case ATS_KEY_A2:
 		if (!g_delete_push)
 		{
-			if ((GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			{
+				if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorOpn();
+			}
+			else if ((GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
 			{
 				CTrapon::GetInstance().IcCard();
 			}
-			else [[likely]]
-			{
-				CTrapon::GetInstance().changeColor();
-			}
-			g_trapon_push.Start();
 			g_delete_push = true;
 		}
 		break;
@@ -494,6 +430,10 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 			{
 				CTrapon::GetInstance().nextTimeTable();
 			}
+			else if (!(GetKeyState(VK_SHIFT) & 0x80) && (GetKeyState(VK_CONTROL) & 0x80))
+			{
+				if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorClsK();
+			}
 			g_PgUp_push = true;
 		}
 		break;
@@ -503,6 +443,10 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 			if ((GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
 			{
 				CTrapon::GetInstance().prevTimeTable();
+			}
+			else if (!(GetKeyState(VK_SHIFT) & 0x80) && (GetKeyState(VK_CONTROL) & 0x80))
+			{
+				if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorOpnK();
 			}
 			g_PgDn_push = true;
 		}
@@ -535,14 +479,7 @@ ATS_API void WINAPI atsKeyUp(int atsKeyCode)
 	case ATS_KEY_S:
 		if (g_Space)
 		{
-//			g_Ding->ExitLoop();
-			g_Ding.StartTime(g_Ding0.Position());
-			g_Ding0.Stop();
-			g_Ding.EndTime(nullptr);
-			g_Ding.LoopCount(0);
-			g_Ding.Reset();
-			g_Ding.Start();
-			g_Ding.StartTime(nullptr);
+			g_Ding->ExitLoop();
 			g_Space = false;
 			if (g_ShasyouBell)
 			{
@@ -550,14 +487,14 @@ ATS_API void WINAPI atsKeyUp(int atsKeyCode)
 				{
 					g_Bell1 = true;
 					g_Ding1.flag = true;
-					g_belltimer = 0;
+					g_belltimer = 0ms;
 				}
 				else if (!g_Bell2)
 				{
 					g_Bell2 = true;
 					g_Ding1.flag = false;
 					g_Ding2.flag = true;
-					g_belltimer = 0;
+					g_belltimer = 0ms;
 				}
 			}
 		}
@@ -750,7 +687,7 @@ ATS_API void WINAPI atsSetBeaconData(ATS_BEACONDATA beaconData)
 		}
 		else
 		{
-			CDoorcontrol::CreateInstance(g_module_dir);
+			CDoorcontrol::CreateInstance(g_module_dir, pXAudio2);
 			if (CDoorcontrol::GetInstance())
 			{
 				CDoorcontrol::GetInstance()->setTrainNo(g_timetable);
@@ -764,7 +701,7 @@ ATS_API void WINAPI atsSetBeaconData(ATS_BEACONDATA beaconData)
 			}
 			else
 			{
-				CAutoAnnounce::CreateInstance(g_module_dir, g_deltaT);
+				CAutoAnnounce::CreateInstance(g_module_dir, pXAudio2, g_deltaT);
 				if (CAutoAnnounce::GetInstance())
 				{
 					CAutoAnnounce::GetInstance()->setTrainNo(beaconData.Optional);

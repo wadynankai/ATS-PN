@@ -6,8 +6,9 @@
 #include <fstream>
 #include <filesystem>
 #include <thread>
+#include <chrono>
 #include "..\..\common\LoadBveText.h"
-#include "..\..\common\CAudioFileInputNode.h"
+#include "..\..\common\CSourceVoice.h"
 
 #ifdef EXCEPTION
 #ifndef WIN32_LEAN_AND_MEAN
@@ -16,6 +17,9 @@
 #include <windows.h>
 #include <source_location>
 #endif // EXCEPTION
+
+
+using namespace std::literals::chrono_literals;
 
 namespace dep_distance
 {
@@ -43,10 +47,9 @@ class CAutoAnnounce
 {
 public:
 	~CAutoAnnounce()noexcept;
-	static void CreateInstance(const std::filesystem::path& moduleDir, int& DelT, 
-		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr)
+	static void CreateInstance(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, std::chrono::milliseconds& DelT)
 	{
-		if (!instance)instance.reset(new CAutoAnnounce(moduleDir, DelT, graph, outputNode));
+		if (!instance)instance.reset(new CAutoAnnounce(moduleDir, pXau2, DelT));
 	}
 /*	static void Delete()noexcept
 	{
@@ -64,8 +67,7 @@ public:
 
 private:
 	CAutoAnnounce() = delete;
-	CAutoAnnounce(const std::filesystem::path& moduleDir, int& DelT, 
-		const winrt::Windows::Media::Audio::AudioGraph& graph = nullptr, const winrt::Windows::Media::Audio::AudioDeviceOutputNode& outputNode = nullptr);
+	CAutoAnnounce(const std::filesystem::path& moduleDir, const winrt::com_ptr<IXAudio2>& pXau2, std::chrono::milliseconds& DelT);
 	CAutoAnnounce& operator=(CAutoAnnounce&) = delete;
 	CAutoAnnounce& operator=(CAutoAnnounce&&) = delete;
 	inline static std::unique_ptr<CAutoAnnounce> instance;
@@ -73,7 +75,7 @@ private:
 	std::filesystem::path m_table_dir;//設定ファイルのディレクトリ
 	int m_trainNo = 0;//時刻表番号
 	int m_staNo = 0;//駅番号
-	int& m_DelT;//1フレームの時間
+	std::chrono::milliseconds& m_DelT;//1フレームの時間
 	double m_Location = 0.0, m_Location_pre = 0.0;//距離程
 //	double m_LocationOrigin = 0.0;//扉が閉まった瞬間の距離程
 //	double m_RunDistance = 0.0, m_RunDistance_pre = 0.0;//出発してからの距離
@@ -85,10 +87,8 @@ private:
 	double m_A_Loc1{ std::numeric_limits<double>::max() };//出発放送の距離程を保存
 	double m_A_Loc2{ std::numeric_limits<double>::max() };//到着放送の距離程を保存
 
-	winrt::Windows::Media::Audio::AudioGraph m_graph;
-	winrt::Windows::Media::Audio::AudioDeviceOutputNode m_outputNode;
-	bool m_graphCreated = false, m_outputNodeCreated = false;
-	CAudioFileInputNode m_Announce1 = nullptr, m_Announce2 = nullptr;
+	winrt::com_ptr<IXAudio2> m_pXAudio2;
+	CSourceVoice m_Announce1{}, m_Announce2{};
 	std::filesystem::path* m_pAnnounce1 = nullptr, * m_pAnnounce2 = nullptr;
 	std::thread m_thread1{}, m_thread2{};
 	bool m_first_time = true;
@@ -116,7 +116,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 			}
 //			Announce1Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread1 = std::thread([&] {
-				m_Announce1 = CAudioFileInputNode(m_graph, m_outputNode, *m_pAnnounce1, 0);
+				m_Announce1.reset(m_pXAudio2, *m_pAnnounce1, 0, XAUDIO2_VOICE_NOPITCH);
 //				Announce1Load = false;
 				});//放送を登録
 			m_Announce1.flag = false;
@@ -129,13 +129,13 @@ inline void CAutoAnnounce::Running(const double& loc)
 			}
 //			Announce2Load = true;//速い方が安全なのでスレッド代入前に行う。
 			m_thread2 = std::thread([&] {
-				m_Announce2 = CAudioFileInputNode(m_graph, m_outputNode, *m_pAnnounce2, 0);
+				m_Announce2.reset(m_pXAudio2, *m_pAnnounce2, 0, XAUDIO2_VOICE_NOPITCH);
 //				Announce2Load = false;
 				});//放送を登録
 			m_Announce2.flag = false;
 		}
 
-		if (m_DelT >= 1000 || m_DelT <= 0)//駅に移動したとき
+		if (m_DelT >= 1000ms || m_DelT <= 0ms)//駅に移動したとき
 		{
 			if (m_thread1.joinable())
 			{
@@ -145,8 +145,8 @@ inline void CAutoAnnounce::Running(const double& loc)
 			{
 				m_thread2.join();
 			}
-			m_Announce1.Stop();
-			m_Announce2.Stop();
+			m_Announce1->Stop();
+			m_Announce2->Stop();
 		}
 		else
 		{
@@ -156,7 +156,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread1.join();
 				}
-				m_Announce1.Start();
+				m_Announce1->Start();
 			}
 			if (m_Location_pre < m_A_Loc2 && m_Location >= m_A_Loc2)
 			{
@@ -164,7 +164,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread2.join();
 				}
-				m_Announce2.Start();
+				m_Announce2->Start();
 			}
 		}
 	}
@@ -205,83 +205,84 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 #ifdef EXCEPTION
 	try {
 #endif // EXCEPTION
-	//	m_LocationOrigin = m_Location;//駅発車時の位置を登録（出発後の放送に使用）
-	if (m_set_no)//始発駅以外
-	{
-		for (const auto& a : m_A_Set)
+		//	m_LocationOrigin = m_Location;//駅発車時の位置を登録（出発後の放送に使用）
+		if (m_set_no)//始発駅以外
 		{
-			if (a.sta_no == m_staNo)
+			for (const auto& a : m_A_Set)
 			{
-				if (!a.name1.empty())
-				{	m_Announce1.flag = true;
-					m_pAnnounce1 = const_cast<std::filesystem::path*>(&a.name1);//次駅放送ファイル名を登録
-				}
-				else
+				if (a.sta_no == m_staNo)
 				{
-					m_Announce1 = nullptr;//前の放送を消去
-				}
-				if (!a.name2.empty())
-				{
-					m_Announce2.flag = true;
-					m_pAnnounce2 = const_cast<std::filesystem::path*>(&a.name2);//到着放送ファイル名を登録
-				}
-				else
-				{
-					m_Announce2 = nullptr;//前の放送を消去
-				}
-				switch (a.mode)//出発後放送の位置を登録
-				{
-				case AnnounceMode::Commuter:
-					m_A_Loc1 = m_Location + dep_distance::commuter;
+					if (!a.name1.empty())
+					{
+						m_Announce1.flag = true;
+						m_pAnnounce1 = const_cast<std::filesystem::path*>(&a.name1);//次駅放送ファイル名を登録
+					}
+					else
+					{
+						m_Announce1 = nullptr;//前の放送を消去
+					}
+					if (!a.name2.empty())
+					{
+						m_Announce2.flag = true;
+						m_pAnnounce2 = const_cast<std::filesystem::path*>(&a.name2);//到着放送ファイル名を登録
+					}
+					else
+					{
+						m_Announce2 = nullptr;//前の放送を消去
+					}
+					switch (a.mode)//出発後放送の位置を登録
+					{
+					case AnnounceMode::Commuter:
+						m_A_Loc1 = m_Location + dep_distance::commuter;
+						break;
+					case AnnounceMode::Rapit:
+					case AnnounceMode::Southern:
+						m_A_Loc1 = m_Location + dep_distance::honsen_ltd_exp;
+						break;
+					case AnnounceMode::Koya:
+						m_A_Loc1 = m_Location + dep_distance::koya_ltd_exp;
+						break;
+					case AnnounceMode::manual:
+						m_A_Loc1 = a.location1;
+						break;
+					}
+					m_A_Loc2 = a.location2;//到着前放送の位置を登録
 					break;
-				case AnnounceMode::Rapit:
-				case AnnounceMode::Southern:
-					m_A_Loc1 = m_Location + dep_distance::honsen_ltd_exp;
-					break;
-				case AnnounceMode::Koya:
-					m_A_Loc1 = m_Location + dep_distance::koya_ltd_exp;
-					break;
-				case AnnounceMode::manual:
-					m_A_Loc1 = a.location1;
-					break;
 				}
-				m_A_Loc2 = a.location2;//到着前放送の位置を登録
-				break;
 			}
 		}
-	}
-	else//始発駅
-	{
-		if (!m_first.name1.empty())
+		else//始発駅
 		{
-			m_Announce1.flag = true;
-			m_pAnnounce1 = &m_first.name1;//次駅放送ファイル名を登録
+			if (!m_first.name1.empty())
+			{
+				m_Announce1.flag = true;
+				m_pAnnounce1 = &m_first.name1;//次駅放送ファイル名を登録
+			}
+			if (!m_first.name2.empty())
+			{
+				m_Announce2.flag = true;
+				m_pAnnounce2 = &m_first.name2;//到着放送ファイル名を登録
+			}
+			switch (m_first.mode)//出発後放送の位置を登録
+			{
+			case AnnounceMode::Commuter:
+				m_A_Loc1 = m_Location + dep_distance::commuter;
+				break;
+			case AnnounceMode::Rapit:
+				m_A_Loc1 = m_Location + dep_distance::rapi_t_first;
+				break;
+			case AnnounceMode::Southern:
+				m_A_Loc1 = m_Location + dep_distance::southern_first;
+				break;
+			case AnnounceMode::Koya:
+				m_A_Loc1 = m_Location + dep_distance::koya_ltd_exp;
+				break;
+			case AnnounceMode::manual:
+				m_A_Loc1 = m_first.location1;
+				break;
+			}
+			m_A_Loc2 = m_first.location2;//到着前放送の位置を登録
 		}
-		if (!m_first.name2.empty())
-		{
-			m_Announce2.flag = true;
-			m_pAnnounce2 = &m_first.name2;//到着放送ファイル名を登録
-		}
-		switch (m_first.mode)//出発後放送の位置を登録
-		{
-		case AnnounceMode::Commuter:
-			m_A_Loc1 = m_Location + dep_distance::commuter;
-			break;
-		case AnnounceMode::Rapit:
-			m_A_Loc1 = m_Location + dep_distance::rapi_t_first;
-			break;
-		case AnnounceMode::Southern:
-			m_A_Loc1 = m_Location + dep_distance::southern_first;
-			break;
-		case AnnounceMode::Koya:
-			m_A_Loc1 = m_Location + dep_distance::koya_ltd_exp;
-			break;
-		case AnnounceMode::manual:
-			m_A_Loc1 = m_first.location1;
-			break;
-		}
-		m_A_Loc2 = m_first.location2;//到着前放送の位置を登録
-	}
 #ifdef EXCEPTION
 	}
 	catch (std::exception& ex)
@@ -296,7 +297,7 @@ inline void CAutoAnnounce::DoorCls(void) noexcept
 		MessageBox(nullptr, ss1.str().c_str(), ss2.str().c_str(), MB_OK);
 	}
 #endif // EXCEPTION
-}
+};
 
 
 #endif // !_CAUTO_ANNOUNCE_INCLUDED_

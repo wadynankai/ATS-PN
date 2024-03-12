@@ -1,22 +1,28 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 
 namespace AtsPlugin
 {
 	internal class LoadBveText
 	{
 		//「;」もしくは「#」から始まるコメントを削除する。
-		public static void cleanUpBveStr(string StrIn)
+		public static string cleanUpBveStr(string StrIn)
 		{
 			if (!string.IsNullOrEmpty(StrIn))
 			{
 				Char[] symbols = new char[2] { '#', ';' };
 				Int32 comment = StrIn.IndexOfAny(symbols);
-				if (comment != -1) StrIn.Remove(comment);
-			}
+				if (comment != -1)
+				{
+					return StrIn.Remove(comment);
+                }
+                else return StrIn;
+            }
+			else return StrIn;
 		}
 
 		//文字列の初めと終わりのスペースやタブを削除する。
-		public static void eraseSpace(string _src)
+		public static string eraseSpace(string _src)
 		{
 			if (!string.IsNullOrEmpty(_src))
 			{
@@ -34,6 +40,7 @@ namespace AtsPlugin
 					if (!string.IsNullOrEmpty(_src)) break;
 				}
 			}
+			return _src;
 		}
 
 		/*template < typename T > size_t splitSymbol(const T& symbol, const std::basic_string<T>& _src, std::basic_string<T>& _left, std::basic_string<T>& _right, const std::locale& _loc = {})

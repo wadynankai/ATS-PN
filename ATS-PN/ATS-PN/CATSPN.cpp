@@ -1,7 +1,7 @@
 #include "CATSPN.h"
 
 //パターン読み込み
-CATSPN::CATSPN(std::filesystem::path& module_dir, float& Speed, int& DelT, double& DelL, int& Bpos) : 
+CATSPN::CATSPN(std::filesystem::path& module_dir, float& Speed, std::chrono::milliseconds& DelT, double& DelL, int& Bpos) : 
 	m_TrainSpeed{ Speed }, m_DeltaT{ DelT }, m_DeltaL{ DelL }, m_Brake{ Bpos }
 {
 	makeTableFromCsv(module_dir / L"AtsPnPattern.csv", m_pattern, 1, std::locale(".UTF-8"));
@@ -132,8 +132,8 @@ void CATSPN::haltON(int number)noexcept
 	m_halt = true;
 	m_Sta_No = number;
 	HaltSound.Start();
-	m_Sta_count = 0;//点滅カウンタリセット
-	m_Sta_tmr = 0;//点滅タイマーリセット
+	m_Sta_count = 0ms;//点滅カウンタリセット
+	m_Sta_tmr = 0ms;//点滅タイマーリセット
 }
 void CATSPN::stopPattern(int dist)noexcept
 {
@@ -174,18 +174,18 @@ void CATSPN::halt(void)noexcept
 		m_halt_App = false;
 	}
 	//駅名点滅
-	if (m_halt && m_Sta_tmr >= 0 && m_Sta_tmr <= 510 && m_Sta_count < 52)
+	if (m_halt && m_Sta_tmr.count() >= 0 && m_Sta_tmr.count() <= 510 && m_Sta_count.count() < 52)
 	{
-		if (StationName == 0 || StationName == m_Sta_No * 4 + 2) m_Sta_count += 1;
+		if (StationName == 0 || StationName == m_Sta_No * 4 + 2) m_Sta_count += 1ms;
 		StationName = m_Sta_No * 4 + 1;
 		m_Sta_tmr += m_DeltaT;
 	}
-	else if (m_halt && m_Sta_tmr > 510 && m_Sta_tmr < 1020 && m_Sta_count < 52)
+	else if (m_halt && m_Sta_tmr > 510ms && m_Sta_tmr < 1020ms && m_Sta_count < 52ms)
 	{
-		if (m_Sta_count == 51)StationName = 0;
+		if (m_Sta_count == 51ms)StationName = 0;
 		else if (StationName == m_Sta_No * 4 + 1)
 		{
-			m_Sta_count += 1;
+			m_Sta_count += 1ms;
 			StationName = m_Sta_No * 4 + 2;
 			m_Sta_tmr += m_DeltaT;
 		}
@@ -195,7 +195,7 @@ void CATSPN::halt(void)noexcept
 			m_Sta_tmr += m_DeltaT;
 		}
 	}
-	else if (m_halt && m_Sta_count < 51)
+	else if (m_halt && m_Sta_count < 51ms)
 	{
 		StationName = m_Sta_No * 4 + 2;
 		m_Sta_tmr %= 1020;
@@ -203,7 +203,7 @@ void CATSPN::halt(void)noexcept
 	else
 	{
 		StationName = 0;
-		m_Sta_tmr = 0;
+		m_Sta_tmr = 0ms;
 	}
 }
 void CATSPN::haltOFF(void)noexcept

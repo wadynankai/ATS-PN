@@ -15,6 +15,7 @@
 #define NOMINMAX
 #endif
 #include <Windows.h>
+#include <chrono>
 #include "atsplugin.h"
 #include "..\..\common\LoadBveText.h"
 #include "CATSPN.h"
@@ -22,13 +23,13 @@
 #include "CAutoAnnounce.h"
 #include "CTraponBackGround.h"
 #include "..\..\common\CAtsSound.h"
-#include "..\..\common\CAudioFileInputNode.h"
+#include "..\..\common\CSourceVoice.h"
 
 #ifdef EXCEPTION
 #include <source_location>
 #endif // EXCEPTION
 
-
+using namespace std::literals::chrono_literals;
 
 
 namespace PN_Beacon
@@ -47,13 +48,13 @@ inline int g_Power;//力行ノッチ
 inline int g_Brake;//ブレーキノッチ
 inline int g_Reverser;//レバーサ
 inline float g_TrainSpeed;//速度
-inline int g_time;//時刻
-inline int g_deltaT;//前のフレームとの時刻の差
+inline std::chrono::time_point<std::chrono::milliseconds> g_time;//時刻
+inline std::chrono::milliseconds g_deltaT;//前のフレームとの時刻の差
 inline double g_location;
 inline double g_deltaL;//1フレームで進んだ距離
-inline int g_tmr;//停車駅名点滅タイマー
+inline std::chrono::milliseconds g_tmr;//停車駅名点滅タイマー
 inline int g_StopSta;//停車駅名
-inline int g_AstTimer;//アスタリスク点滅タイマー
+inline std::chrono::milliseconds g_AstTimer;//アスタリスク点滅タイマー
 inline bool g_Aster;//アスタリスク
 inline int g_timetable = 0;//時刻表
 inline bool g_home_push = false;//Homeが押されている間True
@@ -62,18 +63,18 @@ inline bool g_delete_push = false;//Deleteが押されている間True
 inline bool g_PgUp_push = false;//Deleteが押されている間True
 inline bool g_PgDn_push = false;//Deleteが押されている間True
 
-inline winrt::Windows::Media::Audio::AudioGraph g_graph = nullptr;
-inline winrt::Windows::Media::Audio::AudioDeviceOutputNode g_outputNode = nullptr;
+inline winrt::com_ptr<IXAudio2> pXAudio2;
+inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
 inline std::filesystem::path g_module_dir;
-inline constexpr winrt::Windows::Foundation::TimeSpan dingDuration = std::chrono::milliseconds(42);
+inline constexpr winrt::Windows::Foundation::TimeSpan dingDuration = 42ms;
 inline bool g_Space = false;
 
-inline CAudioFileInputNode g_Ding = nullptr, g_Ding0 = nullptr, g_Ding1 = nullptr, g_Ding2 = nullptr;
+inline CSourceVoice g_Ding = nullptr, g_Ding1 = nullptr, g_Ding2 = nullptr;
 //inline std::array<int, 2> g_sta_no = { 0,0 };
 inline bool g_ShasyouBell = false;//車掌ベル機能有効
 inline bool g_Bell1 = false;
 inline bool g_Bell2 = false;
-inline int g_belltimer = 0;
+inline std::chrono::milliseconds g_belltimer = 0ms;
 
 inline CAtsSound<26> g_trapon_push;
 inline CAtsSound<27> g_trapon_release;

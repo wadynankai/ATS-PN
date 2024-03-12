@@ -48,7 +48,7 @@
     <ClInclude Include="..\..\common\CAtsSoundLoop.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\CAudioFileInputNode.h">
+    <ClInclude Include="..\..\common\CSourceVoice.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

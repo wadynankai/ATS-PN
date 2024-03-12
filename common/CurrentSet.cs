@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+#if VISUAL_BASIC
 using Microsoft.VisualBasic.FileIO;
+#endif
 using System.Linq;
 using System.Text;
 
@@ -68,14 +70,15 @@ namespace AtsPlugin
         public static void makeTableFromCsv(string name,//csvファイルの絶対パス
 		 List<Tuple<X,Y>> table,//テーブルとなるList
 		int row = 1,//csvファイルで読み込む列
-		string enc = "shift_jis"
+		string enc = ".UTF-8"
 		)
         {
-            if (File.Exists(name))
+			if (File.Exists(name))
             {
+                table.Clear();
+#if VISUAL_BASIC
                 using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
                 {
-                    table.Clear();
                     csvReader.CommentTokens = new string[] { "#" };
                     csvReader.SetDelimiters(new string[] { "," });
                     csvReader.HasFieldsEnclosedInQuotes = true;
@@ -92,6 +95,31 @@ namespace AtsPlugin
                     }
                     csvReader.Close();
                 }
+#else
+				using (System.IO.StreamReader csv = new System.IO.StreamReader(System.IO.File.OpenRead(name), System.Text.Encoding.GetEncoding(enc)))
+                {
+                    string loadline;
+					loadline = csv.ReadLine();
+                    while (!csv.EndOfStream)
+                    {
+                        string[] columun;
+                        loadline = csv.ReadLine();
+                        loadline = LoadBveText.cleanUpBveStr(loadline);
+						if (loadline.Length > 0)
+						{
+							columun=loadline.Split(',');
+//                            foreach (var item in columun)
+ //                           {
+//								LoadBveText.eraseSpace(item);
+ //                           }
+                            if (!string.IsNullOrEmpty(columun[row]))
+                            {
+                                table.Add(new Tuple<X, Y>((X)Convert.ChangeType(columun[0], typeof(X)), (Y)Convert.ChangeType(columun[row], typeof(Y))));
+                            }
+                        }
+                    }
+                }
+#endif
                 if (table.Count > 0)
                 {
                     table.Sort();
@@ -104,14 +132,15 @@ namespace AtsPlugin
         string name,//csvファイルの絶対パス
         List<List<Tuple<X, Y>>> table,//テーブルとなるvector
         List<int> index_list,//csvファイルで読み込む列のリスト
-        string enc = "shift_jis"
+        string enc = ".UTF-8"
     )
         {
             table.Clear();
             foreach (var a in index_list) table.Add(new List<Tuple<X, Y>>());
             if (File.Exists(name))
             {
-                using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
+#if VISUAL_BASIC
+				using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
                 {
                     csvReader.CommentTokens = new string[] { "#" };
                     csvReader.SetDelimiters(new string[] { "," });
@@ -137,6 +166,39 @@ namespace AtsPlugin
                     }
                     csvReader.Close();
                 }
+#else
+                using (System.IO.StreamReader csv = new System.IO.StreamReader(System.IO.File.OpenRead(name), System.Text.Encoding.GetEncoding(enc)))
+                {
+                    string loadline;
+                    loadline = csv.ReadLine();
+                    while (!csv.EndOfStream)
+                    {
+                        string[] columun;
+                        loadline = csv.ReadLine();
+                        loadline = LoadBveText.cleanUpBveStr(loadline);
+                        if (loadline.Length > 0)
+                        {
+                            columun = loadline.Split(',');
+//                            foreach (var item in columun)
+//                           {
+//                                LoadBveText.eraseSpace(item);
+//                            }
+                            int size = columun.Count();
+                            var itr = table.GetEnumerator();
+                            foreach (var a in index_list)
+                            {
+                                if (size > a && itr.MoveNext())
+                                {
+                                    if (!String.IsNullOrEmpty(columun[a]))
+                                    {
+                                        itr.Current.Add(new Tuple<X, Y>((X)Convert.ChangeType(columun[0], typeof(X)), (Y)Convert.ChangeType(columun[a], typeof(Y))));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+#endif
                 foreach (var a in table)
                 {
                     if (a.Count > 0)
@@ -149,7 +211,7 @@ namespace AtsPlugin
                 table.TrimExcess();
             }
         }
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NETFX_CORE
         //2点間を通る直線の傾き
         public static X slope(Tuple<X, Y> p1, Tuple<X, Y> p2)
         {
@@ -276,9 +338,9 @@ namespace AtsPlugin
             else if (table.Count == 1) return table[0].first;
             else return (X)Convert.ChangeType(value, typeof(X));
         }//線形補間(逆関数)
-#endif
-	}
-	struct pair<X, Y>
+#endif //NET40_OR_GREATER || NETFX_CORE
+    }
+    struct pair<X, Y>
 	{
 		public X first { get; set; }
 		public Y second { get; set; }
@@ -289,8 +351,8 @@ namespace AtsPlugin
 		}
     }
 
-#if !NET40_OR_GREATER
-	internal class CURRENT_SET : IEquatable<CURRENT_SET>, IComparable<CURRENT_SET>
+#if !(NET40_OR_GREATER || NETFX_CORE)
+    internal class CURRENT_SET : IEquatable<CURRENT_SET>, IComparable<CURRENT_SET>
 	{
 		public float first;
 		public float second;
@@ -337,31 +399,57 @@ namespace AtsPlugin
 		public static void makeTableFromCsv(string name,//csvファイルの絶対パス
 			 List<CURRENT_SET> table,//テーブルとなるList
 			int row = 1,//csvファイルで読み込む列
-			string enc = "shift_jis"
+			string enc = ".UTF-8"
 		)
 		{
 			if (File.Exists(name))
 			{
-				using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
-				{
 					table.Clear();
-					csvReader.CommentTokens = new string[] { "#" };
-					csvReader.SetDelimiters(new string[] { "," });
-					csvReader.HasFieldsEnclosedInQuotes = true;
+#if VISUAL_BASIC
+                using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
+                {
+                    csvReader.CommentTokens = new string[] { "#" };
+                    csvReader.SetDelimiters(new string[] { "," });
+                    csvReader.HasFieldsEnclosedInQuotes = true;
 
-					//1行目はヘッダーなので飛ばす。
-					csvReader.ReadLine();
-					while (!csvReader.EndOfData)
-					{
-						string[] columun = csvReader.ReadFields();
-						if (!string.IsNullOrEmpty(columun[row]))
-						{
-							table.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[row])));
-						}
-					}
-					csvReader.Close();
-				}
-				if (table.Count > 0)
+                    //1行目はヘッダーなので飛ばす。
+                    csvReader.ReadLine();
+                    while (!csvReader.EndOfData)
+                    {
+                        string[] columun = csvReader.ReadFields();
+                        if (!string.IsNullOrEmpty(columun[row]))
+                        {
+                            table.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[row])));
+                        }
+                    }
+                    csvReader.Close();
+                }
+#else
+                    using (System.IO.StreamReader csv = new System.IO.StreamReader(System.IO.File.OpenRead(name), System.Text.Encoding.GetEncoding(enc)))
+                    {
+                        string loadline;
+                        loadline = csv.ReadLine();
+                        while (!csv.EndOfStream)
+                        {
+                            string[] columun;
+                            loadline = csv.ReadLine();
+                            loadline = LoadBveText.cleanUpBveStr(loadline);
+                            if (loadline.Length > 0)
+                            {
+                                columun = loadline.Split(',');
+ //                               foreach (var item in columun)
+ //                               {
+ //                                   LoadBveText.eraseSpace(item);
+ //                               }
+                                if (!string.IsNullOrEmpty(columun[row]))
+                                {
+                                    table.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[row])));
+                                }
+                            }
+                        }
+                    }
+#endif
+                    if (table.Count > 0)
 				{
 					table.Sort();
 				}
@@ -374,40 +462,74 @@ namespace AtsPlugin
 		string name,//csvファイルの絶対パス
 		List<List<CURRENT_SET>> table,//テーブルとなるvector
 		List<int> index_list,//csvファイルで読み込む列のリスト
-		string enc = "shift_jis"
+		string enc = ".UTF-8"
 	)
 		{
 			table.Clear();
 			foreach (var a in index_list) table.Add(new List<CURRENT_SET>());
 			if (File.Exists(name))
-			{
+            {
+#if VISUAL_BASIC
 				using (TextFieldParser csvReader = new TextFieldParser(name, Encoding.GetEncoding(enc)))
-				{
-					csvReader.CommentTokens = new string[] { "#" };
-					csvReader.SetDelimiters(new string[] { "," });
-					csvReader.HasFieldsEnclosedInQuotes = true;
+                {
+                    csvReader.CommentTokens = new string[] { "#" };
+                    csvReader.SetDelimiters(new string[] { "," });
+                    csvReader.HasFieldsEnclosedInQuotes = true;
 
-					//1行目はヘッダーなので飛ばす。
-					csvReader.ReadLine();
-					while (!csvReader.EndOfData)
-					{
-						string[] columun = csvReader.ReadFields();
-						int size = columun.Count();
-						var itr = table.GetEnumerator();
-						foreach (var a in index_list)
-						{
-							if (size > a && itr.MoveNext())
-							{
-								if (!String.IsNullOrEmpty(columun[a]))
-								{
-									itr.Current.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[a])));
-								}
-							}
-						}
-					}
-					csvReader.Close();
-				}
-				foreach (var a in table)
+                    //1行目はヘッダーなので飛ばす。
+                    csvReader.ReadLine();
+                    while (!csvReader.EndOfData)
+                    {
+                        string[] columun = csvReader.ReadFields();
+                        int size = columun.Count();
+                        var itr = table.GetEnumerator();
+                        foreach (var a in index_list)
+                        {
+                            if (size > a && itr.MoveNext())
+                            {
+                                if (!String.IsNullOrEmpty(columun[a]))
+                                {
+                                    itr.Current.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[a])));
+                                }
+                            }
+                        }
+                    }
+                    csvReader.Close();
+                }
+#else
+                using (System.IO.StreamReader csv = new System.IO.StreamReader(System.IO.File.OpenRead(name), System.Text.Encoding.GetEncoding(enc)))
+                {
+                    string loadline;
+                    loadline = csv.ReadLine();
+                    while (!csv.EndOfStream)
+                    {
+                        string[] columun;
+                        loadline = csv.ReadLine();
+                        loadline = LoadBveText.cleanUpBveStr(loadline);
+                        if (loadline.Length > 0)
+                        {
+                            columun = loadline.Split(',');
+//                            foreach (var item in columun)
+//                            {
+//                                LoadBveText.eraseSpace(item);
+//                            }
+                            int size = columun.Count();
+                            var itr = table.GetEnumerator();
+                            foreach (var a in index_list)
+                            {
+                                if (size > a && itr.MoveNext())
+                                {
+                                    if (!String.IsNullOrEmpty(columun[a]))
+                                    {
+                                        itr.Current.Add(new CURRENT_SET(float.Parse(columun[0]), float.Parse(columun[a])));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+#endif
+            foreach (var a in table)
 				{
 					if (a.Count > 0)
 					{

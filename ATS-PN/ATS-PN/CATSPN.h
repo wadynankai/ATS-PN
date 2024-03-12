@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <filesystem>
+#include <chrono>
 #ifndef _WIN32_WINNT
 #include <winsdkver.h>
 #define _WIN32_WINNT _WIN32_WINNT_WIN10
@@ -23,10 +24,12 @@
 #include "..\..\common\CAtsSound.h"
 #include "..\..\common\CAtsSoundLoop.h"
 
+using namespace std::literals::chrono_literals;
+
 class CATSPN
 {
 public:
-	static void CreateInstance(std::filesystem::path& module_dir, float& Speed, int& DelT, double& DelL, int& Bpos)
+	static void CreateInstance(std::filesystem::path& module_dir, float& Speed, std::chrono::milliseconds& DelT, double& DelL, int& Bpos)
 	{
 		if (!pInstance)pInstance.reset(new CATSPN(module_dir, Speed, DelT, DelL, Bpos));
 	}
@@ -84,7 +87,7 @@ public:
 private:
 	//パターン読み込み
 	CATSPN() = delete;
-	CATSPN(std::filesystem::path& module_dir, float& Speed, int& DelT, double& DelL, int& Bpos);
+	CATSPN(std::filesystem::path& module_dir, float& Speed, std::chrono::milliseconds &DelT, double& DelL, int& Bpos);
 	CATSPN(CATSPN&) = delete;
 	CATSPN(CATSPN&&) = delete;
 	CATSPN& operator=(CATSPN&) = delete;
@@ -105,9 +108,9 @@ private:
 	//駅番号
 	int m_Sta_No = 0;
 	//駅番号点滅カウンタ
-	int m_Sta_count = 0;
+	std::chrono::milliseconds m_Sta_count = 0ms;
 	//駅番号点滅タイマー
-	int m_Sta_tmr = 0;
+	std::chrono::milliseconds m_Sta_tmr = 0ms;
 	//駅通防止停止距離
 	double m_halt_dist = 0.0;
 	//速度制限速度
@@ -139,7 +142,7 @@ private:
 	//速度
 	float& m_TrainSpeed;
 	//前回との時刻の差
-	int& m_DeltaT;
+	std::chrono::milliseconds& m_DeltaT;
 	//前回との位置の差
 	double& m_DeltaL;
 	//ブレーキハンドルの位置
