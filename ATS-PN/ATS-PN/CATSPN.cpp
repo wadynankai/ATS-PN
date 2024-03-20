@@ -73,7 +73,7 @@ void CATSPN::RunPNcontrol(void)noexcept
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety || m_LineMaxSpeed_b);//PNêßå‰
 	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_b);//Pê⁄ãﬂ
 	//Pê⁄ãﬂâπê∫
-	if (PatternApproachDisp && !svcBrake && !emgBrake && m_haltTimer > m_haltLength)ApproachSound.SetVolume(1.0f);
+	if (PatternApproachDisp && m_PatternTouchSoundTimer>m_PatternTouchSoundMinLength && m_haltTimer > m_haltLength)ApproachSound.SetVolume(1.0f);
 	else ApproachSound.SetVolume(0.0f);
 
 	if (m_halt && m_halt_App) haltDisp = 2;//âwí ñhé~ê‘
