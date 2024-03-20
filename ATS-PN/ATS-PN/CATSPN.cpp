@@ -52,6 +52,7 @@ void CATSPN::RunPNcontrol(void)noexcept
 {
 	//駅通防止チャイムが鳴ってからの時間を増加さる。
 	m_haltTimer += m_DeltaT;
+	if (m_haltTimer < 0ms)m_haltTimer = m_haltLength;
 	//パターンの計算
 	m_LineMaxSpeed_b = (m_TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
 	m_LineMaxSpeed_emg = (m_TrainSpeed > m_Line_Max_Speed + 5);//線区最高速度を5キロ超えたら非常ブレーキ
@@ -61,10 +62,15 @@ void CATSPN::RunPNcontrol(void)noexcept
 	//ブレーキの動作
 	svcBrake = (m_halt_b || m_LimitSpeed_b || m_LineMaxSpeed_b || m_TerminalSafety_b);
 	emgBrake = (m_halt_emg || m_LimitSpeed_emg || m_LineMaxSpeed_emg || m_TerminalSafety_emg);
+	if ((svcBrake || emgBrake))PatternTouchSound.SetVolume(1.0f);
+	else PatternTouchSound.SetVolume(0.0f);
 
 	//パターン接触音は最低1秒は鳴らす
-	if ((svcBrake || emgBrake))m_PatternTouchSoundTimer = 0ms;
+	if ((svcBrake || emgBrake) && m_PatternTouchSoundTimer > m_PatternTouchSoundMinLength)m_PatternTouchSoundTimer = 0ms;
+	else if (svcBrake || emgBrake)
+	{ }
 	else m_PatternTouchSoundTimer += m_DeltaT;
+	if (m_PatternTouchSoundTimer < 0ms)m_PatternTouchSoundTimer = m_PatternTouchSoundMinLength;
 	//パターン接触音は最低1秒は鳴らす
 	if(m_PatternTouchSoundTimer<m_PatternTouchSoundMinLength)PatternTouchSound.SetVolume(1.0f);
 	else PatternTouchSound.SetVolume(0.0f);
