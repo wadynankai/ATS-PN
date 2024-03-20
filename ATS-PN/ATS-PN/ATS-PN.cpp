@@ -146,29 +146,21 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 		g_location = vehicleState.Location;
 		g_TrainSpeed = vehicleState.Speed;
 
+
+
 		if (CATSPN::GetInstance())CATSPN::GetInstance()->RunPNcontrol();//PN制御実行
-		g_AstTimer += g_deltaT;
-		if (g_AstTimer >= 1000ms)
-		{
-			g_Aster = !g_Aster;
-			g_AstTimer %= 1000ms;
-		}
-		else if (g_AstTimer < 0ms)g_AstTimer = 0ms;
-
-
-		panel[99] = CTrapon::GetInstance().getBackGround(g_deltaT);//トラポン背景出力
-		for (auto& a : CTrapon::GetInstance().getAtsIndexList())
-		{
-			panel[a] = static_cast<int>(CTrapon::GetInstance().getTimeTable(a));//時刻表
-		}
-
-		if (!CTrapon::GetInstance().getPower())//トラポンの電源が切れているとき
+		if (!CTrapon::GetInstance().getPower()||!(panel[120]||panel[121]))//トラポンの電源が切れているとき
 		{
 			//表示
 			panel[2] = 0;//GPS
 			panel[3] = 0;//P接近
 			panel[5] = 0;//ブレーキ動作
 			panel[6] = 0;//PN制御
+			panel[99] = 0;//トラポン背景
+			for (auto& a : CTrapon::GetInstance().getAtsIndexList())
+			{
+				panel[a] = 0;//時刻表
+			}
 			panel[193] = 0;//速度制限
 			panel[199] = 0;//駅名点滅
 			panel[208] = 0;//駅通防止
@@ -176,102 +168,111 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 			panel[255] = 0;//アスタリスク
 		}
 		else [[likely]]//トラポンの電源が入っているとき
+		{
+			panel[99] = CTrapon::GetInstance().getBackGround(g_deltaT);//トラポン背景出力
+			for (auto& a : CTrapon::GetInstance().getAtsIndexList())
 			{
-				//表示
-				panel[2] = true;//GPS
-				if (CATSPN::GetInstance())
+				panel[a] = static_cast<int>(CTrapon::GetInstance().getTimeTable(a));//時刻表
+			}
+			g_AstTimer += g_deltaT;
+			if (g_AstTimer >= 1000ms)
+			{
+				g_Aster = !g_Aster;
+				g_AstTimer %= 1000ms;
+			}
+			else if (g_AstTimer < 0ms)g_AstTimer = 0ms;
+			//表示
+			panel[2] = true;//GPS
+			if (CATSPN::GetInstance())
+			{
+				panel[3] = CATSPN::GetInstance()->PatternApproachDisp;//P接近
+				panel[5] = (CATSPN::GetInstance()->svcBrake || CATSPN::GetInstance()->emgBrake);//ブレーキ動作
+				panel[6] = CATSPN::GetInstance()->PNcontrolDisp;//PN制御
+				panel[193] = CATSPN::GetInstance()->SpeedLimitDisp;//速度制限
+				if (CATSPN::GetInstance()->StationName == 0)//駅名点滅していないとき
 				{
-					panel[3] = CATSPN::GetInstance()->PatternApproachDisp;//P接近
-					panel[5] = (CATSPN::GetInstance()->svcBrake || CATSPN::GetInstance()->emgBrake);//ブレーキ動作
-					panel[6] = CATSPN::GetInstance()->PNcontrolDisp;//PN制御
-					panel[193] = CATSPN::GetInstance()->SpeedLimitDisp;//速度制限
-					if (CATSPN::GetInstance()->StationName == 0)//駅名点滅していないとき
+					panel[199] = 0;
+				}
+				else
+				{
+					if (!CTrapon::GetInstance().getColor())
 					{
-						panel[199] = 0;
+						panel[199] = CATSPN::GetInstance()->StationName;//駅名点滅（黒画面）
 					}
 					else
 					{
-						if (!CTrapon::GetInstance().getColor())
-						{
-							panel[199] = CATSPN::GetInstance()->StationName;//駅名点滅（黒画面）
-						}
-						else
-						{
-							panel[199] = CATSPN::GetInstance()->StationName + 2;//駅名点滅（白画面）
-						}
-					}
-					panel[208] = CATSPN::GetInstance()->haltDisp;//駅通防止
-					panel[233] = CATSPN::GetInstance()->TerminalSafetyDisp;//終端防護
-				}
-				panel[255] = g_Aster;//アスタリスク
-			}
-
-
-
-				//音
-				if (CATSPN::GetInstance())
-				{
-					CATSPN::GetInstance()->HaltSound(sound);//駅通防止チャイム
-					CATSPN::GetInstance()->ApproachSound(sound);//「接近，接近」
-				}
-			if (CDoorcontrol::GetInstance())
-			{
-				CDoorcontrol::GetInstance()->Running(time);
-				panel[217] = CDoorcontrol::GetInstance()->doorYama;
-				panel[218] = CDoorcontrol::GetInstance()->doorUmi;
-			}
-			if (CAutoAnnounce::GetInstance())
-			{
-				CAutoAnnounce::GetInstance()->Running(vehicleState.Location);
-				panel[213] = static_cast<int>(CAutoAnnounce::GetInstance()->micGauge * 10.0f);
-			}
-
-			ret.Reverser = g_Reverser;
-			ret.Power = g_Power;
-			ret.Brake = g_Brake;//正常時
-			if (CATSPN::GetInstance())
-			{
-				if (CATSPN::GetInstance()->emgBrake)ret.Brake = g_emgBrake;//非常指令
-				else if (CATSPN::GetInstance()->svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
-			}
-			ret.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
-
-			//ボタンの音
-			g_trapon_push(sound);
-			g_trapon_release(sound);
-			g_trapon_on(sound);
-			g_trapon_off(sound);
-
-			if (g_ShasyouBell)
-			{
-				if (g_Bell1)
-				{
-					g_belltimer += g_deltaT;
-				}
-				if (g_belltimer > 1500ms)
-				{
-					if (g_Ding1.flag)
-					{
-						g_Ding1->Start();
-						g_Ding1.flag = false;
-					}
-					else if (g_Ding2.flag)
-					{
-						g_Ding2->Start();
-						g_Ding2.flag = false;
+						panel[199] = CATSPN::GetInstance()->StationName + 2;//駅名点滅（白画面）
 					}
 				}
+				panel[208] = CATSPN::GetInstance()->haltDisp;//駅通防止
+				panel[233] = CATSPN::GetInstance()->TerminalSafetyDisp;//終端防護
 			}
-			if (CDoorcontrol::GetInstance())
-			{
-				if (CDoorcontrol::GetInstance()->getShashouBell())g_Ding1->Start();
-			}
+			panel[255] = g_Aster;//アスタリスク
 
+		}
 
-			if (l_pause)//ポーズのとき
+		//音
+		if (CATSPN::GetInstance())
+		{
+			CATSPN::GetInstance()->HaltSound(sound);//駅通防止チャイム
+			CATSPN::GetInstance()->ApproachSound(sound);//「接近，接近」
+			CATSPN::GetInstance()->PatternTouchSound(sound);//バターン接触音
+		}
+		if (CDoorcontrol::GetInstance())
+		{
+			CDoorcontrol::GetInstance()->Running(time);
+			panel[217] = CDoorcontrol::GetInstance()->doorYama;
+			panel[218] = CDoorcontrol::GetInstance()->doorUmi;
+		}
+		if (CAutoAnnounce::GetInstance())
+		{
+			CAutoAnnounce::GetInstance()->Running(vehicleState.Location);
+			panel[213] = static_cast<int>(CAutoAnnounce::GetInstance()->micGauge * 10.0f);
+		}
+		ret.Reverser = g_Reverser;
+		ret.Power = g_Power;
+		ret.Brake = g_Brake;//正常時
+		if (CATSPN::GetInstance())
+		{
+			if (CATSPN::GetInstance()->emgBrake)ret.Brake = g_emgBrake;//非常指令
+			else if (CATSPN::GetInstance()->svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
+		}
+		ret.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
+					//ボタンの音
+		g_trapon_push(sound);
+		g_trapon_release(sound);
+		g_trapon_on(sound);
+		g_trapon_off(sound);
+		
+		if (g_ShasyouBell)
+		{
+			if (g_Bell1)
 			{
-				if (pXAudio2)pXAudio2->StopEngine();
+				g_belltimer += g_deltaT;
 			}
+			if (g_belltimer > 1500ms)
+			{
+				if (g_Ding1.flag)
+				{
+					g_Ding1->Start();
+					g_Ding1.flag = false;
+				}
+				else if (g_Ding2.flag)
+				{
+					g_Ding2->Start();
+					g_Ding2.flag = false;
+				}
+			}
+		}
+		if (CDoorcontrol::GetInstance())
+		{
+			if (CDoorcontrol::GetInstance()->getShashouBell())g_Ding1->Start();
+		}
+
+		if (l_pause)//ポーズのとき
+		{
+			if (pXAudio2)pXAudio2->StopEngine();
+		}
 #ifdef EXCEPTION
 	}
 	catch (std::exception& ex)
@@ -418,9 +419,12 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 	case ATS_KEY_B1:
 		if (!g_home_push)
 		{
-			if (CATSPN::GetInstance())CATSPN::GetInstance()->resetATSPN();
-			g_trapon_push.Start();
-			g_home_push = true;
+			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			{
+				if (CATSPN::GetInstance())CATSPN::GetInstance()->resetATSPN();
+				g_trapon_push.Start();
+				g_home_push = true;
+			}
 		}
 		break;
 	case ATS_KEY_C1:
@@ -658,7 +662,10 @@ ATS_API void WINAPI atsSetBeaconData(ATS_BEACONDATA beaconData)
 			&& beaconData.Optional != 86
 			&& beaconData.Optional != 106)
 		{
-			if (CATSPN::GetInstance())CATSPN::GetInstance()->haltON(beaconData.Optional);
+			if (CTrapon::GetInstance().getPower())
+			{
+				if (CATSPN::GetInstance())CATSPN::GetInstance()->haltON(beaconData.Optional);
+			}
 		}
 		else g_ShasyouBell = true;
 		if (CDoorcontrol::GetInstance())
