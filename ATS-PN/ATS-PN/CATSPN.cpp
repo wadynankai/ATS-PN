@@ -153,7 +153,7 @@ void CATSPN::stopPattern(int dist)noexcept
 {
 	if (!m_halt)haltON(0);
 	m_halt_P = true;
-	m_halt_dist = float(dist);
+	m_halt_dist = static_cast<double>(dist);
 }
 void CATSPN::halt(void)noexcept
 {
@@ -329,13 +329,13 @@ void CATSPN::LimitSpeedOFF(void)noexcept
 void CATSPN::TerminalSafetyON(int dist)noexcept
 {
 	m_TerminalSafety = true;
-	m_Terminal_Dist = static_cast<float>(dist);
+	m_Terminal_Dist = static_cast<double>(dist);
 }
 void CATSPN::TerminalSafety(void)noexcept
 {
 	if (m_TerminalSafety)
 	{
-		double pattern = m_Terminal_Dist + m_CurrentErr;//停止に必要な距離
+		double pattern = m_stopDist + m_CurrentErr;//停止に必要な距離
 		double Approach = pattern + m_TrainSpeed * 5.0f / 3.6f;//常用パターンの5秒分の距離手前でP接近
 		m_Terminal_Dist -= m_DeltaL;
 		m_TerminalSafety_App = (Approach >= m_Terminal_Dist);
@@ -348,7 +348,7 @@ void CATSPN::TerminalSafety(void)noexcept
 			else //常用パターン中
 			{
 				if (m_TrainSpeed < interpolationInv(m_Terminal_Dist, m_pattern) - 2.0f || m_TrainSpeed <= 7.5f)m_TerminalSafety_b = false;//ブレーキを解除
-				if (m_TrainSpeed > interpolationInv(m_Terminal_Dist + 10.0, m_pattern) + 5.0f)m_TerminalSafety_emg = true;//非常ブレーキ
+				if (m_TrainSpeed > interpolationInv(m_Terminal_Dist + 10.0, m_pattern) + 5.0f || m_Terminal_Dist <= -0.5)m_TerminalSafety_emg = true;//非常ブレーキ
 			}
 		}
 		else m_TerminalSafety_b = ((pattern >= m_Terminal_Dist && m_TrainSpeed > 7.5f) || m_Terminal_Dist <= -0.5);
