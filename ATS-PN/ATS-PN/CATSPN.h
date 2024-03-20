@@ -79,10 +79,12 @@ public:
 	int StationName = 0;
 	//P接近
 	bool PatternApproachDisp = false;
-	//駅通防止チャイム
+	//駅通防止チャイム(優先順位②)
 	CAtsSound<6> HaltSound;
-	//パターン接近音声
+	//パターン接近音声(優先順位③)
 	CAtsSoundLoop<11> ApproachSound;
+	//パターン接触音(優先順位①)
+	CAtsSoundLoop<13> PatternTouchSound;
 
 private:
 	//パターン読み込み
@@ -108,11 +110,15 @@ private:
 	//駅番号
 	int m_Sta_No = 0;
 	//駅番号点滅カウンタ
-	std::chrono::milliseconds m_Sta_count = 0ms;
+	size_t m_Sta_count = 0;
 	//駅番号点滅タイマー
 	std::chrono::milliseconds m_Sta_tmr = 0ms;
 	//駅通防止停止距離
 	double m_halt_dist = 0.0;
+	//駅通防止チャイムの長さ
+	static constexpr std::chrono::milliseconds m_haltLength = 2500ms;
+	//駅通防止チャイムが鳴ってからの時間
+	std::chrono::milliseconds m_haltTimer = m_haltLength;
 	//速度制限速度
 	float m_LimitSpeed_Speed = std::numeric_limits<float>::max(), m_LimitSpeed_Speed_pre = std::numeric_limits<float>::max();
 	//速度制限開始距離

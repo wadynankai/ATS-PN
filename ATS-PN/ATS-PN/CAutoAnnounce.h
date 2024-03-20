@@ -108,7 +108,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 //	m_RunDistance = m_Location - m_LocationOrigin;//出発してからの距離
 	if (!m_first_time)
 	{
-		if (m_Announce1.flag && m_pAnnounce1/* && !m_thread2.joinable()*/)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce1.flag && m_pAnnounce1 && !m_thread2.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread1.joinable())
 			{
@@ -121,7 +121,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				});//放送を登録
 			m_Announce1.flag = false;
 		}
-		if (m_Announce2.flag && m_pAnnounce2/* && !m_thread1.joinable()*/)//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
+		if (m_Announce2.flag && m_pAnnounce2 && !m_thread1.joinable())//Annouce1と2を同時に読み込んでしまうとメディアファンデーションの影響でフリーズする。
 		{
 			if (m_thread2.joinable())
 			{
@@ -156,6 +156,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread1.join();
 				}
+				if (m_Announce2.isRunning())m_Announce2->Stop();
 				m_Announce1->Start();
 			}
 			if (m_Location_pre < m_A_Loc2 && m_Location >= m_A_Loc2)
@@ -164,6 +165,7 @@ inline void CAutoAnnounce::Running(const double& loc)
 				{
 					m_thread2.join();
 				}
+				if (m_Announce1.isRunning())m_Announce1->Stop();
 				m_Announce2->Start();
 			}
 		}

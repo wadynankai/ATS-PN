@@ -59,7 +59,7 @@ public:
 	{
 		XAUDIO2_VOICE_STATE state = { 0 };
 		GetState(&state);
-		m_samplesPlayedAtStarted = state.SamplesPlayed;
+		if(m_pSourceVoice)m_samplesPlayedAtStarted = state.SamplesPlayed;
 		if (m_LoopCount == XAUDIO2_LOOP_INFINITE)
 		{
 			return StartInf(OperationSet);
@@ -208,7 +208,7 @@ protected:
 		m_LoopCount(right.m_LoopCount), m_audioData(std::move(right.m_audioData)), m_pWfx(std::move(right.m_pWfx)),
 		m_pBuffer(std::move(right.m_pBuffer)), m_started(std::exchange(right.m_started,false)), m_Flags(right.m_Flags),
 		m_MaxFrequencyRatio(right.m_MaxFrequencyRatio), m_pCallback(right.m_pCallback),
-		m_pSendList(right.m_pSendList), m_pEffectChain(right.m_pEffectChain){}
+		m_pSendList(right.m_pSendList), m_pEffectChain(right.m_pEffectChain), m_samplesPlayedAtStarted(right.m_samplesPlayedAtStarted){}
 	//コンストラクタ
 	Xaudio2CSourvoiceInterface(
 		const winrt::com_ptr<IXAudio2>& Xau2,//IXAudio2インターフェースへのポインタ 
@@ -223,7 +223,7 @@ protected:
 		m_LoopCount(LoopCount), m_audioData(), m_pWfx(std::make_unique<WAVEFORMATEX>()),
 		m_pBuffer(std::make_unique<XAUDIO2_BUFFER>()), m_started(false), m_Flags(Flags),
 		m_MaxFrequencyRatio(MaxFrequencyRatio), m_pCallback(pCallback),
-		m_pSendList(pSendList), m_pEffectChain(pEffectChain)
+		m_pSendList(pSendList), m_pEffectChain(pEffectChain), m_samplesPlayedAtStarted(0)
 	{
 		*m_pWfx = { 0 };
 		*m_pBuffer = { 0 };
@@ -248,7 +248,7 @@ protected:
 	std::unique_ptr<XAUDIO2_BUFFER> m_pBuffer;//XAUDIO2_BUFFER構造体
 	std::unique_ptr<WAVEFORMATEX> m_pWfx;//ソースボイスに渡す形式
 	bool m_started = false;//startしてからstopするまでtrue
-	UINT64 m_samplesPlayedAtStarted = 0;
+	UINT64 m_samplesPlayedAtStarted;
 	//再生中かどうか
 	[[nodiscard]] inline bool isRunning(void) const noexcept
 	{
@@ -493,6 +493,9 @@ public:
 			if (m_pBuffer)if (FAILED(hr = m_pSourceVoice->SubmitSourceBuffer(m_pBuffer.get())))return hr;//バッファをにデータを入れる。
 			if (m_started)//もし，直前に再生していた場合，再生する。
 			{
+				XAUDIO2_VOICE_STATE state = { 0 };
+				GetState(&state);
+				if (m_pSourceVoice)m_samplesPlayedAtStarted = state.SamplesPlayed;
 				if (SUCCEEDED(hr = m_pSourceVoice->Start(0U, OperationSet)))m_started = true;
 			}
 			return hr;
@@ -840,6 +843,7 @@ private:
 		winrt::com_ptr<IMFMediaType> pOutputMediaType;//再生データのタイプ
 		HRESULT hr;//COM関数の戻り値
 		//https://github.com/microsoft/Windows-universal-samples/blob/master/Samples/SpatialSound/cpp/AudioFileReader.cpp
+
 		hr = MFCreateSourceReaderFromURL(name_normal.c_str(), nullptr, pReader.put());//ファイルを開く
 		if (FAILED(hr))//失敗したらMFStartupを実行してからやりなおし。
 		{
@@ -877,10 +881,10 @@ private:
 			if (SUCCEEDED(hr))hr = pBuf->Lock(&pbData, nullptr, &dwBufSize);
 			if (SUCCEEDED(hr))
 			{
-//				auto currentDataSize = m_audioData.size();
-//				m_audioData.resize(currentDataSize + dwBufSize);
-//				CopyMemory(m_audioData.data() + currentDataSize, pbData, dwBufSize);
-//				m_audioData.insert(m_audioData.cend(), pbData, pbData + dwBufSize);
+				//				auto currentDataSize = m_audioData.size();
+				//				m_audioData.resize(currentDataSize + dwBufSize);
+				//				CopyMemory(m_audioData.data() + currentDataSize, pbData, dwBufSize);
+				//				m_audioData.insert(m_audioData.cend(), pbData, pbData + dwBufSize);
 				std::copy(pbData, pbData + dwBufSize, std::back_inserter(m_audioData));
 				hr = pBuf->Unlock();//メモリの解放（deleteしてはいけない）
 			}

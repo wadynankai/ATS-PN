@@ -49,6 +49,8 @@ void CATSPN::resetATSPN(void)noexcept
 //PN制御実行
 void CATSPN::RunPNcontrol(void)noexcept
 {
+	//駅通防止チャイムが鳴ってからの時間を増加さる。
+	m_haltTimer += m_DeltaT;
 	//パターンの計算
 	m_LineMaxSpeed_b = (m_TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
 	m_LineMaxSpeed_emg = (m_TrainSpeed > m_Line_Max_Speed + 5);//線区最高速度を5キロ超えたら非常ブレーキ
@@ -58,12 +60,14 @@ void CATSPN::RunPNcontrol(void)noexcept
 	//ブレーキの動作
 	svcBrake = (m_halt_b || m_LimitSpeed_b || m_LineMaxSpeed_b || m_TerminalSafety_b);
 	emgBrake = (m_halt_emg || m_LimitSpeed_emg || m_LineMaxSpeed_emg || m_TerminalSafety_emg);
+	if ((svcBrake || emgBrake))PatternTouchSound.SetVolume(1.0f);
+	else PatternTouchSound.SetVolume(0.0f);
 
 	//表示
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety || m_LineMaxSpeed_b);//PN制御
 	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_b);//P接近
 	//P接近音声
-	if (PatternApproachDisp)ApproachSound.SetVolume(1.0f);
+	if (PatternApproachDisp && !svcBrake && !emgBrake && m_haltTimer > m_haltLength)ApproachSound.SetVolume(1.0f);
 	else ApproachSound.SetVolume(0.0f);
 
 	if (m_halt && m_halt_App) haltDisp = 2;//駅通防止赤
@@ -131,9 +135,13 @@ void CATSPN::haltON(int number)noexcept
 {
 	m_halt = true;
 	m_Sta_No = number;
-	HaltSound.Start();
-	m_Sta_count = 0ms;//点滅カウンタリセット
+	m_Sta_count = 0;//点滅カウンタリセット
 	m_Sta_tmr = 0ms;//点滅タイマーリセット
+	if (!svcBrake && !emgBrake)
+	{
+		HaltSound.Start();
+		m_haltTimer = 0ms;//駅通防止チャイムが鳴ってからの時間リセット
+	}
 }
 void CATSPN::stopPattern(int dist)noexcept
 {
@@ -174,18 +182,18 @@ void CATSPN::halt(void)noexcept
 		m_halt_App = false;
 	}
 	//駅名点滅
-	if (m_halt && m_Sta_tmr.count() >= 0 && m_Sta_tmr.count() <= 510 && m_Sta_count.count() < 52)
+	if (m_halt && m_Sta_tmr.count() >= 0 && m_Sta_tmr.count() <= 510 && m_Sta_count < 52)
 	{
-		if (StationName == 0 || StationName == m_Sta_No * 4 + 2) m_Sta_count += 1ms;
+		if (StationName == 0 || StationName == m_Sta_No * 4 + 2) m_Sta_count += 1;
 		StationName = m_Sta_No * 4 + 1;
 		m_Sta_tmr += m_DeltaT;
 	}
-	else if (m_halt && m_Sta_tmr > 510ms && m_Sta_tmr < 1020ms && m_Sta_count < 52ms)
+	else if (m_halt && m_Sta_tmr > 510ms && m_Sta_tmr < 1020ms && m_Sta_count < 52)
 	{
-		if (m_Sta_count == 51ms)StationName = 0;
+		if (m_Sta_count == 51)StationName = 0;
 		else if (StationName == m_Sta_No * 4 + 1)
 		{
-			m_Sta_count += 1ms;
+			m_Sta_count += 1;
 			StationName = m_Sta_No * 4 + 2;
 			m_Sta_tmr += m_DeltaT;
 		}
@@ -195,7 +203,7 @@ void CATSPN::halt(void)noexcept
 			m_Sta_tmr += m_DeltaT;
 		}
 	}
-	else if (m_halt && m_Sta_count < 51ms)
+	else if (m_halt && m_Sta_count < 51)
 	{
 		StationName = m_Sta_No * 4 + 2;
 		m_Sta_tmr %= 1020;
