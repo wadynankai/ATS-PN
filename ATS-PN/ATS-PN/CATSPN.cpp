@@ -14,6 +14,7 @@ void CATSPN::initATSPN(void)noexcept
 {
 	haltOFF();
 	LimitSpeedOFF();
+	TerminalSafetyOFF();
 	if(m_LimitSpeed_Speed==std::numeric_limits<float>::max())
 	{
 		m_LimitSpeed = false;
@@ -22,25 +23,18 @@ void CATSPN::initATSPN(void)noexcept
 		m_LimitSpeed_App = false;
 		m_defeatDistance = std::numeric_limits<double>::max();
 	}
-	m_TerminalSafety = false;
-	m_TerminalSafety_App = false;
-	m_TerminalSafety_b = false;
-	m_TerminalSafety_emg = false;
 }
 // リセットボタン
 void CATSPN::resetATSPN(void)noexcept
 {
 	haltOFF();
 	LimitSpeedOFF();
+	TerminalSafetyOFF();
 	m_LimitSpeed = false;
 	m_LimitSpeed_b = false;
 	m_LimitSpeed_emg = false;
 	m_LimitSpeed_App = false;
 	m_defeatDistance = std::numeric_limits<double>::max();
-	m_TerminalSafety = false;
-	m_TerminalSafety_App = false;
-	m_TerminalSafety_b = false;
-	m_TerminalSafety_emg = false;
 }
 //編成長の設定
 /*void CATSPN::setFormationLength(int cars) noexcept
@@ -234,6 +228,7 @@ void CATSPN::haltOFF(void)noexcept
 	m_halt_emg = false;
 	m_halt_App = false;
 	HaltSound.Stop();
+	m_haltTimer = m_haltLength;
 }
 // 線区最高速度
 void CATSPN::LineMax(int speed)noexcept
@@ -358,4 +353,13 @@ void CATSPN::TerminalSafety(void)noexcept
 		}
 		else m_TerminalSafety_b = ((pattern >= m_Terminal_Dist && m_TrainSpeed > 7.5f) || m_Terminal_Dist <= -0.5);
 	}
+}
+
+void CATSPN::TerminalSafetyOFF(void)noexcept
+{
+	m_TerminalSafety = false;
+	m_TerminalSafety_App = false;
+	m_TerminalSafety_b = false;
+	m_TerminalSafety_emg = false;
+	m_PatternTouchSoundTimer = m_PatternTouchSoundMinLength;
 }

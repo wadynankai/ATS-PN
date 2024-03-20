@@ -63,6 +63,7 @@ public:
 	// 終端防護（非常指令）
 	void TerminalSafetyON(int)noexcept;
 	void TerminalSafety(void)noexcept;
+	void TerminalSafetyOFF(void)noexcept;
 	//非常ブレーキ指令
 	bool emgBrake = false;
 	//常用最大ブレーキ指令

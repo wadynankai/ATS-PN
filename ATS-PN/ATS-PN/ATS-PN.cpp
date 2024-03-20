@@ -559,7 +559,11 @@ ATS_API void WINAPI atsDoorOpen(void)
 #ifdef EXCEPTION
 	try {
 #endif // EXCEPTION
-	if (CATSPN::GetInstance())CATSPN::GetInstance()->haltOFF();
+	if (CATSPN::GetInstance())
+	{
+		CATSPN::GetInstance()->haltOFF();
+		CATSPN::GetInstance()->TerminalSafetyOFF();
+	}
 	if (CDoorcontrol::GetInstance())
 	{
 		CDoorcontrol::GetInstance()->DoorOpn();
@@ -589,7 +593,11 @@ ATS_API void WINAPI atsDoorClose(void)
 #ifdef EXCEPTION
 	try {
 #endif // EXCEPTION
-	if (CATSPN::GetInstance())CATSPN::GetInstance()->haltOFF();
+	if (CATSPN::GetInstance())
+	{
+		CATSPN::GetInstance()->haltOFF();
+		CATSPN::GetInstance()->TerminalSafetyOFF();
+	}
 	if (CDoorcontrol::GetInstance())
 	{
 		CDoorcontrol::GetInstance()->DoorCls();
