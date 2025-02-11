@@ -270,6 +270,49 @@ template <typename X, typename Y> [[nodiscard]] inline constexpr Y interpolation
 	else return static_cast<Y>(value);
 }//線形補間
 
+//線形補間(array版)
+template <typename X, typename Y, size_t N> [[nodiscard]] inline constexpr Y interpolation(
+	const X value,//x座標（速度）
+	const std::array <std::pair<X, Y>,N>& table//テーブルとなるarray
+)noexcept
+{
+	if (table.size() > 1)
+	{
+		size_t j = 0;
+		for (const auto& a : table)
+		{
+			if (a.first >= value)break;
+			j++;
+		}
+		if (j > 0 && j < table.size())
+		{
+			if (table.at(j).first != table.at(j - 1).first)
+			{
+				return slope(table.at(j), table.at(j - 1)) * static_cast<Y>(value - table.at(j).first) + table.at(j).second;
+			}
+			else return table.at(j).second;
+		}
+		else if (j == 0)
+		{
+			if (table.at(j + 1).first != table.at(j).first)
+			{
+				return slope(table.at(j + 1), table.at(j)) * static_cast<Y>(value - table.at(j + 1).first) + table.at(j + 1).second;
+			}
+			else return table.at(j).second;
+		}
+		else
+		{
+			if (table.at(table.size() - 1).first != table.at(table.size() - 2).first)
+			{
+				return slope(table.at(table.size() - 1), table.at(table.size() - 2)) * static_cast<Y>(value - table.at(table.size() - 1).first) + table.at(table.size() - 1).second;
+			}
+			else return table.at(table.size() - 1).second;
+		}
+	}
+	else if (table.size() == 1)return table.at(0).second;
+	else return static_cast<Y>(value);
+}//線形補間(array版)
+
 //線形補間(逆関数)
 template <typename X, typename Y> [[nodiscard]] inline constexpr X interpolationInv(
 	const Y value,//Y座標（距離？）

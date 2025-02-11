@@ -201,7 +201,7 @@ public:
 	}
 protected:
 	//空のコンストラクタ
-	Xaudio2CSourvoiceInterface(nullptr_t p = nullptr) noexcept {}
+	Xaudio2CSourvoiceInterface(nullptr_t p = nullptr)noexcept {};
 	//ムーブコンストラクタ
 	Xaudio2CSourvoiceInterface(Xaudio2CSourvoiceInterface&& right) noexcept :
 		m_pXAudio2(std::move(right.m_pXAudio2)), m_pSourceVoice(std::exchange(right.m_pSourceVoice, nullptr)),
@@ -236,7 +236,7 @@ protected:
 			Destroy_Voice();
 		}
 	}
-	winrt::com_ptr<IXAudio2> m_pXAudio2;//IXAudio2へのポインタ
+	winrt::com_ptr<IXAudio2> m_pXAudio2 = nullptr;//IXAudio2へのポインタ
 	IXAudio2SourceVoice* m_pSourceVoice = nullptr;//ソースボイスへのポインタ
 	std::vector<BYTE> m_audioData{};//音声データを保存する領域
 	UINT32 m_LoopCount = XAUDIO2_LOOP_INFINITE;///ループカウント（1回の場合は0，2回の場合は1，…省略した場合は無限ループ
@@ -245,10 +245,10 @@ protected:
 	IXAudio2VoiceCallback* m_pCallback = nullptr;//コールバックへのポインタ，省略可
 	XAUDIO2_VOICE_SENDS* m_pSendList = nullptr;//XAUDIO2_VOICE_SENDS構造体へのポインタ，省略可
 	XAUDIO2_EFFECT_CHAIN* m_pEffectChain = nullptr;//エフェクトチェーン構造体へのポインタ，省略可
-	std::unique_ptr<XAUDIO2_BUFFER> m_pBuffer;//XAUDIO2_BUFFER構造体
-	std::unique_ptr<WAVEFORMATEX> m_pWfx;//ソースボイスに渡す形式
+	std::unique_ptr<XAUDIO2_BUFFER> m_pBuffer{};//XAUDIO2_BUFFER構造体
+	std::unique_ptr<WAVEFORMATEX> m_pWfx{};//ソースボイスに渡す形式
 	bool m_started = false;//startしてからstopするまでtrue
-	UINT64 m_samplesPlayedAtStarted;
+	UINT64 m_samplesPlayedAtStarted = 0;
 	//再生中かどうか
 	[[nodiscard]] inline bool isRunning(void) const noexcept
 	{

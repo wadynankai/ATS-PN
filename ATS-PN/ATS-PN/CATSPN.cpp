@@ -48,8 +48,9 @@ void CATSPN::RunPNcontrol(void)noexcept
 	m_haltTimer += m_DeltaT;
 	if (m_haltTimer < 0ms)m_haltTimer = m_haltLength;
 	//パターンの計算
-	m_LineMaxSpeed_b = (m_TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらブレーキ
-	m_LineMaxSpeed_emg = (m_TrainSpeed > m_Line_Max_Speed + 5);//線区最高速度を5キロ超えたら非常ブレーキ
+	m_LineMaxSpeed_App = (m_TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらP接近
+	m_LineMaxSpeed_b = (m_TrainSpeed > m_Line_Max_Speed + 2);//線区最高速度を2キロ超えたらブレーキ
+	m_LineMaxSpeed_emg = (m_TrainSpeed > m_Line_Max_Speed + 7);//線区最高速度を7キロ超えたら非常ブレーキ
 	halt();
 	LimitSpeed();
 	TerminalSafety();
@@ -71,9 +72,14 @@ void CATSPN::RunPNcontrol(void)noexcept
 
 	//表示
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety || m_LineMaxSpeed_b);//PN制御
-	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_b);//P接近
+	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App);//P接近
 	//P接近音声
-	if (PatternApproachDisp && m_PatternTouchSoundTimer>m_PatternTouchSoundMinLength && m_haltTimer > m_haltLength)ApproachSound.SetVolume(1.0f);
+	if ((m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App)//線区最高速度では鳴らさない
+		&& m_PatternTouchSoundTimer > m_PatternTouchSoundMinLength//常用B中は鳴らさない
+		&& m_haltTimer > m_haltLength)//ピンポンがなっている間は鳴らさない。
+	{
+		ApproachSound.SetVolume(1.0f);
+	}
 	else ApproachSound.SetVolume(0.0f);
 
 	if (m_halt && m_halt_App) haltDisp = 2;//駅通防止赤

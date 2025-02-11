@@ -157,6 +157,7 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 			panel[5] = 0;//ブレーキ動作
 			panel[6] = 0;//PN制御
 			panel[99] = 0;//トラポン背景
+			panel[100] = 0;//時刻表。elseで100番を実行しているので，こちらでも実行しないと消えない。
 			for (auto& a : CTrapon::GetInstance().getAtsIndexList())
 			{
 				panel[a] = 0;//時刻表
@@ -170,10 +171,13 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 		else [[likely]]//トラポンの電源が入っているとき
 		{
 			panel[99] = CTrapon::GetInstance().getBackGround(g_deltaT);//トラポン背景出力
+
+			panel[100] = static_cast<int>(CTrapon::GetInstance().getTimeTable(100));//時刻表。カードを抜いたときにICカードをセットしてくださいの画面を出すため100番は必ず実行する。
 			for (auto& a : CTrapon::GetInstance().getAtsIndexList())
 			{
-				panel[a] = static_cast<int>(CTrapon::GetInstance().getTimeTable(a));//時刻表
+				if (a != 100)panel[a] = static_cast<int>(CTrapon::GetInstance().getTimeTable(a));//時刻表
 			}
+
 			g_AstTimer += g_deltaT;
 			if (g_AstTimer >= 1000ms)
 			{

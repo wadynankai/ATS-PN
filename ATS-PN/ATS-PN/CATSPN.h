@@ -108,6 +108,8 @@ private:
 	bool m_LimitSpeed_App = false;
 	//P接近（終端防護）
 	bool m_TerminalSafety_App = false;
+	//P接近（線区最高速度）
+	bool m_LineMaxSpeed_App = false;
 	//駅番号
 	int m_Sta_No = 0;
 	//駅番号点滅カウンタ

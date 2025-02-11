@@ -56,7 +56,11 @@ public:
 			m_power = true;
 		}
 	}
-	void IcCard()noexcept { m_IcCard = !m_IcCard; }
+	void IcCard()noexcept
+	{
+		m_IcCard = !m_IcCard;
+		m_index = 0;
+	}
 	void addTrainNo(size_t index,size_t dia) noexcept
 	{ 
 		std::pair<size_t, size_t> temp{ index,dia };
