@@ -48,7 +48,7 @@ void CATSPN::RunPNcontrol(void)noexcept
 	m_haltTimer += m_DeltaT;
 	if (m_haltTimer < 0ms)m_haltTimer = m_haltLength;
 
-	//駅通防止パターン発生中，7 km/h以下が10秒続いたら駅通防止を解除
+	//駅通防止パターン発生中，5 km/h以下が3秒続いたら駅通防止を解除
 	if (m_halt && m_TrainSpeed <= 7.0f)
 	{
 		m_HaltLowSpeedTimer += m_DeltaT;
@@ -268,7 +268,7 @@ void CATSPN::LimitSpeedON(int param) noexcept
 		if (m_LimitSpeed_Speed_pre < m_LimitSpeed_Speed) m_defeatDistance = 0.0;//今回の制限の方が高いときは前の制限から最後尾が抜けるまで待つ。
 		else m_defeatDistance = m_formationLength;
 	}
-	m_LimitSpeed_Speed = static_cast<float>((param % 1000) + 1);
+	m_LimitSpeed_Speed = static_cast<float>((param % 1000) + 7);
 	m_LimitSpeed_dist = static_cast<float>(param / 1000);
 	if (!m_pattern.empty() && m_LimitSpeed_Speed <= m_pattern_Max)m_stopDistFromLimit = interpolation(m_LimitSpeed_Speed, m_pattern);
 	else m_stopDistFromLimit = m_LimitSpeed_Speed * m_LimitSpeed_Speed / m_deceleration;
@@ -289,10 +289,10 @@ void CATSPN::LimitSpeed()noexcept
 			m_LimitSpeed_App = (m_TrainSpeed > m_LimitSpeed_Speed_pre);
 			if (!m_LimitSpeed_b)//ブレーキをかける
 			{
-				if ((m_TrainSpeed > m_LimitSpeed_Speed_pre + 1.0f))m_LimitSpeed_b = true;
+				if ((m_TrainSpeed > m_LimitSpeed_Speed_pre))m_LimitSpeed_b = true;
 				if (m_LimitSpeed_Speed != std::numeric_limits<float>::max())//パターン解除ではない場合
 				{
-					m_LimitSpeed_App |= (Approach >= m_LimitSpeed_dist && m_TrainSpeed > m_LimitSpeed_Speed + 1.0f);//次の制限速度の接近も考える。
+					m_LimitSpeed_App |= (Approach >= m_LimitSpeed_dist && m_TrainSpeed > m_LimitSpeed_Speed);//次の制限速度の接近も考える。
 					if ((pattern >= m_LimitSpeed_dist))m_defeatDistance = m_formationLength;//常用パターンに当たったら編成長を抜けた後の動作をする→ブレーキ動作
 				}
 			}
@@ -314,7 +314,7 @@ void CATSPN::LimitSpeed()noexcept
 		{
 			if (m_LimitSpeed_dist >= 0)//制限速度に入るまで
 			{
-				m_LimitSpeed_App = (Approach >= m_LimitSpeed_dist && m_TrainSpeed > m_LimitSpeed_Speed + 1.0f);
+				m_LimitSpeed_App = (Approach >= m_LimitSpeed_dist && m_TrainSpeed > m_LimitSpeed_Speed);
 				if (!m_pattern.empty() && m_TrainSpeed <= m_pattern_Max)
 				{
 					if (!m_LimitSpeed_b)//ブレーキをかける
@@ -335,7 +335,7 @@ void CATSPN::LimitSpeed()noexcept
 				m_LimitSpeed_App = (m_TrainSpeed > m_LimitSpeed_Speed);
 				if (!m_LimitSpeed_b)//ブレーキをかける
 				{
-					if ((m_TrainSpeed > m_LimitSpeed_Speed + 1.0f))m_LimitSpeed_b = true;
+					if ((m_TrainSpeed > m_LimitSpeed_Speed))m_LimitSpeed_b = true;
 				}
 				else if (m_TrainSpeed < m_LimitSpeed_Speed - 2.0f)m_LimitSpeed_b = false;
 			}
