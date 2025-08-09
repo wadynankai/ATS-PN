@@ -118,10 +118,10 @@ private:
 	std::chrono::milliseconds m_Sta_tmr = 0ms;
 	//‰w’Ê–h~’â~‹——£
 	double m_halt_dist = 0.0;
-	//‰w’Ê–h~‚É7km/hˆÈ‰º‚Å‘–‚Á‚Ä‚¢‚é’·‚³
+	//‰w’Ê–h~‚É5km/hˆÈ‰º‚Å‘–‚Á‚Ä‚¢‚é’·‚³
 	std::chrono::milliseconds m_HaltLowSpeedTimer = 0ms;
-	//‰w’Ê–h~‚É7km/hˆÈ‰º‚Å‘–‚Á‚½‰w’Ê–h~ƒpƒ^[ƒ“‚ğØ‚é’·‚³
-	static constexpr std::chrono::milliseconds m_HaltLowSpeedLength = 10000ms;//10•b
+	//‰w’Ê–h~‚É5km/hˆÈ‰º‚Å‘–‚Á‚½‰w’Ê–h~ƒpƒ^[ƒ“‚ğØ‚é’·‚³
+	static constexpr std::chrono::milliseconds m_HaltLowSpeedLength = 3000ms;//3•b
 	//‰w’Ê–h~ƒ`ƒƒƒCƒ€‚Ì’·‚³
 	static constexpr std::chrono::milliseconds m_haltLength = 2500ms;
 	//‰w’Ê–h~ƒ`ƒƒƒCƒ€‚ª–Â‚Á‚Ä‚©‚ç‚ÌŠÔ
