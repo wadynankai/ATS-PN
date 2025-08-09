@@ -47,6 +47,23 @@ void CATSPN::RunPNcontrol(void)noexcept
 	//駅通防止チャイムが鳴ってからの時間を増加さる。
 	m_haltTimer += m_DeltaT;
 	if (m_haltTimer < 0ms)m_haltTimer = m_haltLength;
+
+	//駅通防止パターン発生中，7 km/h以下が10秒続いたら駅通防止を解除
+	if (m_halt && m_TrainSpeed <= 7.0f)
+	{
+		m_HaltLowSpeedTimer += m_DeltaT;
+		if (m_HaltLowSpeedTimer > m_HaltLowSpeedLength)
+		{
+			haltOFF();
+			m_HaltLowSpeedTimer = 0ms;
+		}
+	}
+	else
+	{
+		m_HaltLowSpeedTimer = 0ms;
+	}
+
+
 	//パターンの計算
 	m_LineMaxSpeed_App = (m_TrainSpeed > m_Line_Max_Speed);//線区最高速度を超えたらP接近
 	m_LineMaxSpeed_b = (m_TrainSpeed > m_Line_Max_Speed + 2);//線区最高速度を2キロ超えたらブレーキ

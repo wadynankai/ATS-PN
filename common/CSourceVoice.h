@@ -670,14 +670,15 @@ public:
 			}
 			if (PlayBegin)m_pBuffer->PlayBegin = static_cast<UINT32>(PlayBegin.Value().count() * m_pWfx->nSamplesPerSec / winrt::Windows::Foundation::TimeSpan::period::den);
 			else m_pBuffer->PlayBegin = 0U;
-			if (PlayLength)m_pBuffer->PlayLength = static_cast<UINT32>(PlayLength.Value().count() * m_pWfx->nSamplesPerSec / winrt::Windows::Foundation::TimeSpan::period::den);
+			if (PlayLength)m_pBuffer->PlayLength = static_cast<UINT32>(PlayLength.Value().count() * m_pWfx->nSamplesPerSec / winrt::Windows::Foundation::TimeSpan::period::den)+1;
 			else m_pBuffer->PlayLength = 0U;
 			if (LoopBegin)m_pBuffer->LoopBegin = static_cast<UINT32>(LoopBegin.Value().count() * m_pWfx->nSamplesPerSec / winrt::Windows::Foundation::TimeSpan::period::den);
 			else m_pBuffer->LoopBegin = 0U;
 			if (LoopLength)m_pBuffer->LoopLength = static_cast<UINT32>(LoopLength.Value().count() * m_pWfx->nSamplesPerSec / winrt::Windows::Foundation::TimeSpan::period::den);
 			else m_pBuffer->LoopLength = 0U;
-			if (m_pBuffer)m_pBuffer->LoopCount = LoopCount.Value();
-			else m_pBuffer->LoopCount = XAUDIO2_LOOP_INFINITE;
+			if (LoopCount)m_pBuffer->LoopCount = LoopCount.Value();
+			else if (m_pBuffer)m_pBuffer->LoopCount = m_pBuffer->LoopCount;
+			else m_pBuffer->LoopCount = 0U;
 			m_LoopCount = LoopCount.Value();
 		}
 	}

@@ -61,7 +61,7 @@ public:
 			m_untenshiBell = false;
 			return true;
 		}
-		else _LIKELY
+		else [[likely]]
 		{
 			return false;
 		}

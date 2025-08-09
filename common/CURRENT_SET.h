@@ -186,19 +186,22 @@ template <typename T, typename X, typename Y, typename U> void makeTableFromCsv(
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚ÌŒX‚«
 template <typename X, typename Y> [[nodiscard]] inline constexpr Y slope(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
-	return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
+	if (p2.first != p1.first)return (p2.second - p1.second) / (static_cast<Y>(p2.first) - static_cast<Y>(p1.first));
+	else return 0;
 }
 
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚ÌŒX‚«(‹tŠÖ”)
 template <typename X, typename Y> [[nodiscard]] inline constexpr X slopeInv(const std::pair<X, Y>& p1, const std::pair<X, Y>& p2)noexcept
 {
-	return (p2.first - p1.first) / (static_cast<X>(p2.second) - static_cast<X>(p1.second));
+	if (p2.second != p1.second)return (p2.first - p1.first) / (static_cast<X>(p2.second) - static_cast<X>(p1.second));
+	else return 0;
 }
 
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚ÌŒX‚«
 template <typename X, typename Y> [[nodiscard]] inline constexpr Y slope(const X& x1, const Y& y1, const X& x2, const Y& y2)noexcept
 {
-	return (y2 - y1) / (static_cast<Y>(x2) - static_cast<Y>(x1));
+	if (x2 != x1)return (y2 - y1) / (static_cast<Y>(x2) - static_cast<Y>(x1));
+	else return 0;
 }
 
 //2“_ŠÔ‚ğ’Ê‚é’¼ü‚ÌyØ•Ğ
