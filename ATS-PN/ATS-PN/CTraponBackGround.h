@@ -35,7 +35,7 @@ public:
 		m_power = false;
 	}
 	void changeColor()noexcept { m_white_ref = !m_white_ref; }//表示切替ボタン
-	bool powerButton()noexcept //電源ボタン
+	const bool powerButton()noexcept //電源ボタン
 	{
 		m_white_ref = false;
 		m_white = false;
@@ -56,10 +56,11 @@ public:
 			m_power = true;
 		}
 	}
-	void IcCard()noexcept
+	const bool IcCard()noexcept//ICカードの抜き差し。音を鳴らすときにtrueを返す。
 	{
 		m_IcCard = !m_IcCard;
 		m_index = 0;
+		return !m_IcCard && !m_Train_no.empty() && m_power;
 	}
 	void addTrainNo(size_t index,size_t dia) noexcept
 	{ 

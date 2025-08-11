@@ -58,10 +58,12 @@ inline std::chrono::milliseconds g_AstTimer;//アスタリスク点滅タイマー
 inline bool g_Aster;//アスタリスク
 inline int g_timetable = 0;//時刻表
 inline bool g_home_push = false;//Homeが押されている間True
-inline bool g_insert_push = false;//Insertが押されている間True
-inline bool g_delete_push = false;//Deleteが押されている間True
-inline bool g_PgUp_push = false;//Deleteが押されている間True
-inline bool g_PgDn_push = false;//Deleteが押されている間True
+inline bool g_insert_push = false;//Insertが押されている間True(Shiftは押されていない)
+inline bool g_insert_shift_push = false;//Insertが押されている間True(Shiftは押されている)
+inline bool g_delete_push = false;//Deleteが押されている間True(Shiftは押されていない)
+inline bool g_delete_shift_push = false;//Deleteが押されている間True(Shiftは押されている)
+inline bool g_PgUp_push = false;//PgUpが押されている間True
+inline bool g_PgDn_push = false;//PgDnが押されている間True
 
 inline winrt::com_ptr<IXAudio2> pXAudio2;
 inline IXAudio2MasteringVoice* pMasteringVoice = nullptr;
@@ -76,10 +78,11 @@ inline bool g_Bell1 = false;
 inline bool g_Bell2 = false;
 inline std::chrono::milliseconds g_belltimer = 0ms;
 
-inline CAtsSound<26> g_trapon_push;
-inline CAtsSound<27> g_trapon_release;
-inline CAtsSound<28> g_trapon_on;
-inline CAtsSound<29> g_trapon_off;
+inline CAtsSound<12> g_ICRelease;//ICカード抜き取り音
+inline CAtsSound<26> g_trapon_push;//トラポン表示切替ボタンを押したときの音
+inline CAtsSound<27> g_trapon_release;//トラポン表示切替ボタンを離したときの音
+inline CAtsSound<28> g_trapon_on;//トラポン電源オンの音
+inline CAtsSound<29> g_trapon_off;//トラポン電源オフの音
 
 
 #endif // !_ATS_PN_INCLUDED_

@@ -242,7 +242,8 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 			else if (CATSPN::GetInstance()->svcBrake && ret.Brake != g_emgBrake)ret.Brake = g_svcBrake;//常用最大指令
 		}
 		ret.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
-					//ボタンの音
+		//ボタンの音
+		g_ICRelease(sound);
 		g_trapon_push(sound);
 		g_trapon_release(sound);
 		g_trapon_on(sound);
@@ -389,35 +390,47 @@ ATS_API void WINAPI atsKeyDown(int atsKeyCode)
 		}
 		break;
 	case ATS_KEY_A1:
-		if (!g_insert_push)
+		if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
 		{
-
-			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			if(!g_insert_push)
 			{
+				g_insert_push = true;
 				CTrapon::GetInstance().changeColor();
 				g_trapon_push.Start();
 			}
-			else if ((GetKeyState(VK_SHIFT) & 0x80)&& !(GetKeyState(VK_CONTROL) & 0x80))
+		}
+		else if ((GetKeyState(VK_SHIFT) & 0x80)&& !(GetKeyState(VK_CONTROL) & 0x80))
+		{
+			if (!g_insert_shift_push)
 			{
+				g_insert_shift_push = true;
 				bool power = CTrapon::GetInstance().powerButton();
 				if (power)g_trapon_on.Start();
 				else g_trapon_off.Start();
 			}
-			g_insert_push = true;
 		}
 		break;
 	case ATS_KEY_A2:
-		if (!g_delete_push)
+		if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
 		{
-			if (!(GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+			if (!g_delete_push)
 			{
 				if (CDoorcontrol::GetInstance())CDoorcontrol::GetInstance()->NambaDoorOpn();
+				g_delete_push = true;
 			}
-			else if ((GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+		}
+		else if ((GetKeyState(VK_SHIFT) & 0x80) && !(GetKeyState(VK_CONTROL) & 0x80))
+		{
+			if (!g_delete_shift_push)
 			{
-				CTrapon::GetInstance().IcCard();
+				bool ICCardSound = CTrapon::GetInstance().IcCard();
+				if(ICCardSound)//ICカードを抜いたとき
+				{
+					g_ICRelease.Start();
+				}
+				g_trapon_push.Start();
+				g_delete_shift_push = true;
 			}
-			g_delete_push = true;
 		}
 		break;
 	case ATS_KEY_B1:
@@ -507,24 +520,33 @@ ATS_API void WINAPI atsKeyUp(int atsKeyCode)
 			}
 		}
 		break;
-	case ATS_KEY_B1:
-		if (g_home_push)
-		{
-			g_trapon_release.Start();
-			g_home_push = false;
-		}
-		break;
 	case ATS_KEY_A1:
 		if (g_insert_push)
 		{
+			g_trapon_release.Start();
 			g_insert_push = false;
+		}
+		if (g_insert_shift_push)
+		{
+			g_insert_shift_push = false;
 		}
 		break;
 	case ATS_KEY_A2:
 		if (g_delete_push)
 		{
-			g_trapon_release.Start();
 			g_delete_push = false;
+		}
+		if(g_delete_shift_push)
+		{
+			g_trapon_release.Start();
+			g_delete_shift_push = false;
+		}
+		break;
+	case ATS_KEY_B1:
+		if (g_home_push)
+		{
+			g_trapon_release.Start();
+			g_home_push = false;
 		}
 		break;
 	case ATS_KEY_C1:
