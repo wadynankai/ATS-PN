@@ -48,11 +48,11 @@ void CATSPN::RunPNcontrol(void)noexcept
 	m_haltTimer += m_DeltaT;
 	if (m_haltTimer < 0ms)m_haltTimer = m_haltLength;
 
-	//‰w’Ê–h~ƒpƒ^[ƒ“”­¶’†C5 km/hˆÈ‰º‚ª3•b‘±‚¢‚½‚ç‰w’Ê–h~‚ğ‰ğœ
+	//‰w’Ê–h~ƒpƒ^[ƒ“”­¶’†C–Ú•W‹——£‚Ü‚Å150mˆÈ“à‚Å5 km/hˆÈ‰º‚ª3•b‘±‚¢‚½‚ç‰w’Ê–h~‚ğ‰ğœ
 	if (m_halt && m_TrainSpeed <= 5.0f)
 	{
 		m_HaltLowSpeedTimer += m_DeltaT;
-		if (m_HaltLowSpeedTimer > m_HaltLowSpeedLength)
+		if (m_HaltLowSpeedTimer > m_HaltLowSpeedLength && m_halt_dist<150.0)
 		{
 			haltOFF();
 			m_HaltLowSpeedTimer = 0ms;
@@ -89,7 +89,15 @@ void CATSPN::RunPNcontrol(void)noexcept
 
 	//•\¦
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety || m_LineMaxSpeed_b);//PN§Œä
-	PatternApproachDisp = (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App);//PÚ‹ß
+
+	//PÚ‹ßEí—pBE”ñíB‚Ì•\¦
+	if(!m_halt_App && !m_LimitSpeed_App && !m_TerminalSafety_App && !m_LineMaxSpeed_App
+		&& !m_halt_b || !m_LimitSpeed_b || !m_TerminalSafety_b || !m_LineMaxSpeed_b
+		&& !m_halt_emg || !m_LimitSpeed_emg || !m_TerminalSafety_emg || !m_LineMaxSpeed_emg)PatternApproachDisp = 0;//Á“”
+	else if (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App)PatternApproachDisp = 1;//PÚ‹ß
+	else if (m_halt_b || m_LimitSpeed_b || m_TerminalSafety_b || m_LineMaxSpeed_b)PatternApproachDisp = 1;//í—pB
+	else if (m_halt_emg || m_LimitSpeed_emg || m_TerminalSafety_emg || m_LineMaxSpeed_emg)PatternApproachDisp = 3;//”ñíB
+
 	//PÚ‹ß‰¹º
 	if ((m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App)//ü‹æÅ‚‘¬“x‚Å‚Í–Â‚ç‚³‚È‚¢
 		&& m_PatternTouchSoundTimer > m_PatternTouchSoundMinLength//í—pB’†‚Í–Â‚ç‚³‚È‚¢

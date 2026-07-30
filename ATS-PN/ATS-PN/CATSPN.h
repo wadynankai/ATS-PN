@@ -78,8 +78,8 @@ public:
 	int TerminalSafetyDisp = 0;
 	//駅名表示
 	int StationName = 0;
-	//P接近
-	bool PatternApproachDisp = false;
+	//1：P接近・2：常用B・3：非常B
+	int PatternApproachDisp = 0;
 	//駅通防止チャイム(優先順位②)
 	CAtsSound<6> HaltSound;
 	//パターン接近音声(優先順位③)
