@@ -14,6 +14,7 @@
     <LocalDebuggerCommand>C:\Program Files\mackoy\BveTs6\BveTs.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>"D:\Favorites\mackoy\BveTs5\Scenarios\南海 - 南海電鉄南海線（普通）7100.txt"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArgumentsHistory>"D:\Favorites\mackoy\BveTs5\Scenarios\南海 - 南海電鉄南海線（普通）7100.txt"|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

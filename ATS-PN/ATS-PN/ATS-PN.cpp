@@ -189,7 +189,7 @@ ATS_API ATS_HANDLES WINAPI atsElapse(ATS_VEHICLESTATE vehicleState, int* panel, 
 			panel[2] = true;//GPS
 			if (CATSPN::GetInstance())
 			{
-				panel[3] = CATSPN::GetInstance()->PatternApproachDisp;//P接近
+				panel[3] = CATSPN::GetInstance()->PatternApproachDisp;//1：P接近・2：常用B・3：非常B
 				panel[5] = (CATSPN::GetInstance()->svcBrake || CATSPN::GetInstance()->emgBrake);//ブレーキ動作
 				panel[6] = CATSPN::GetInstance()->PNcontrolDisp;//PN制御
 				panel[193] = CATSPN::GetInstance()->SpeedLimitDisp;//速度制限
