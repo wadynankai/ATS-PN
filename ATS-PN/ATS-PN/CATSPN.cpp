@@ -95,7 +95,7 @@ void CATSPN::RunPNcontrol(void)noexcept
 		&& !m_halt_b || !m_LimitSpeed_b || !m_TerminalSafety_b || !m_LineMaxSpeed_b
 		&& !m_halt_emg || !m_LimitSpeed_emg || !m_TerminalSafety_emg || !m_LineMaxSpeed_emg)PatternApproachDisp = 0;//Á“”
 	else if (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App)PatternApproachDisp = 1;//PÚ‹ß
-	else if (m_halt_b || m_LimitSpeed_b || m_TerminalSafety_b || m_LineMaxSpeed_b)PatternApproachDisp = 1;//í—pB
+	else if (m_halt_b || m_LimitSpeed_b || m_TerminalSafety_b || m_LineMaxSpeed_b)PatternApproachDisp = 2;//í—pB
 	else if (m_halt_emg || m_LimitSpeed_emg || m_TerminalSafety_emg || m_LineMaxSpeed_emg)PatternApproachDisp = 3;//”ñíB
 
 	//PÚ‹ß‰¹º
