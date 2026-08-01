@@ -74,8 +74,6 @@ void CATSPN::RunPNcontrol(void)noexcept
 	//ブレーキの動作
 	svcBrake = (m_halt_b || m_LimitSpeed_b || m_LineMaxSpeed_b || m_TerminalSafety_b);
 	emgBrake = (m_halt_emg || m_LimitSpeed_emg || m_LineMaxSpeed_emg || m_TerminalSafety_emg);
-	if ((svcBrake || emgBrake))PatternTouchSound.SetVolume(1.0f);
-	else PatternTouchSound.SetVolume(0.0f);
 
 	//パターン接触音は最低1秒は鳴らす
 	if ((svcBrake || emgBrake) && m_PatternTouchSoundTimer > m_PatternTouchSoundMinLength)m_PatternTouchSoundTimer = 0ms;
@@ -90,13 +88,11 @@ void CATSPN::RunPNcontrol(void)noexcept
 	//表示
 	PNcontrolDisp = (m_halt || m_LimitSpeed || m_TerminalSafety || m_LineMaxSpeed_b);//PN制御
 
-	//P接近・常用B・非常Bの表示
-	if(!m_halt_App && !m_LimitSpeed_App && !m_TerminalSafety_App && !m_LineMaxSpeed_App
-		&& !m_halt_b && !m_LimitSpeed_b && !m_TerminalSafety_b && !m_LineMaxSpeed_b
-		&& !m_halt_emg && !m_LimitSpeed_emg && !m_TerminalSafety_emg && !m_LineMaxSpeed_emg)PatternApproachDisp = 0;//消灯
+	//P接近・常用B・非常Bの表示（if文は厳しい順に書く必要あり）
+	if (emgBrake)PatternApproachDisp = 3;//非常B
+	else if (m_PatternTouchSoundTimer < m_PatternTouchSoundMinLength)PatternApproachDisp = 2;//常用B（最低1秒は表示する）
 	else if (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App)PatternApproachDisp = 1;//P接近
-	else if (m_halt_b || m_LimitSpeed_b || m_TerminalSafety_b || m_LineMaxSpeed_b)PatternApproachDisp = 2;//常用B
-	else if (m_halt_emg || m_LimitSpeed_emg || m_TerminalSafety_emg || m_LineMaxSpeed_emg)PatternApproachDisp = 3;//非常B
+	else[[likely]]PatternApproachDisp = 0;//消灯
 
 	//P接近音声
 	if ((m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App)//線区最高速度では鳴らさない
