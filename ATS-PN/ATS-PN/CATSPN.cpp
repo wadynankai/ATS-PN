@@ -92,8 +92,8 @@ void CATSPN::RunPNcontrol(void)noexcept
 
 	//P接近・常用B・非常Bの表示
 	if(!m_halt_App && !m_LimitSpeed_App && !m_TerminalSafety_App && !m_LineMaxSpeed_App
-		&& !m_halt_b || !m_LimitSpeed_b || !m_TerminalSafety_b || !m_LineMaxSpeed_b
-		&& !m_halt_emg || !m_LimitSpeed_emg || !m_TerminalSafety_emg || !m_LineMaxSpeed_emg)PatternApproachDisp = 0;//消灯
+		&& !m_halt_b && !m_LimitSpeed_b && !m_TerminalSafety_b && !m_LineMaxSpeed_b
+		&& !m_halt_emg && !m_LimitSpeed_emg && !m_TerminalSafety_emg && !m_LineMaxSpeed_emg)PatternApproachDisp = 0;//消灯
 	else if (m_halt_App || m_LimitSpeed_App || m_TerminalSafety_App || m_LineMaxSpeed_App)PatternApproachDisp = 1;//P接近
 	else if (m_halt_b || m_LimitSpeed_b || m_TerminalSafety_b || m_LineMaxSpeed_b)PatternApproachDisp = 2;//常用B
 	else if (m_halt_emg || m_LimitSpeed_emg || m_TerminalSafety_emg || m_LineMaxSpeed_emg)PatternApproachDisp = 3;//非常B
